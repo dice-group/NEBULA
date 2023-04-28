@@ -17,6 +17,17 @@ def sendpost(url,data,headers):
         print("POST request failed with status code:", response.status_code)
         return response.json()
 
+def sendpostjson(url,json,headers):
+    # Send the POST request using the requests library
+    response = requests.post(url,json=json,headers=headers)
+    # Check the response status code
+    if response.status_code == 200:
+        print("POST request was successful!")
+        return response.json()
+    else:
+        print("POST request failed with status code:", response.status_code)
+        return response.json()
+
 
 
 
