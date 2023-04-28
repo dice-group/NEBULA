@@ -11,14 +11,20 @@ The application will provide an API endpoint at:
 http://127.0.0.1:5000
 ```
 
-Methods
+__Methods__
+
 The Nebula application provides three methods: **check** ,**status**, **test or default**.
 
 **Check Method**
 The check method accepts both POST and GET requests, and requires a text input to check for accuracy. Optional language input can also be provided for the text.
 
-For POST requests, the text input and optional language input should be passed in the request body.
-For GET requests, the text input should be passed in the URL arguments along with the optional language input.
+For POST requests, the text [text] input and optional language input [lang] should be passed in the request body.
+For GET requests, the  text [text] input should be passed in the URL arguments along with the optional language input [lang].
+
+```
+    - English : en
+    - German : de
+```
 The check method will return a JSON object containing an ID for the text input. Here is an example of the JSON response:
 
 ```
