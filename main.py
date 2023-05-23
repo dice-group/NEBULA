@@ -22,6 +22,11 @@ def startpipeline(text, lang):
     return identifier
 
 
+def trim(text):
+    text = text.replace("\"","").replace("\'","");
+    return text;
+
+
 @app.route('/check', methods=['GET', 'POST'])
 def check():
     args = request.args
@@ -33,6 +38,7 @@ def check():
     if text is None:
         return Response("{\"error\": \"send the string as [text] argument in query string or body\"}", status=400,
                         mimetype='application/json')
+    text = trim(text)
     id = startpipeline(text, lang)
 
     return Response("{\"id\": \"" + id + "\"}", status=200, mimetype='application/json')
