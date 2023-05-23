@@ -4,16 +4,22 @@ import settings
 conn = sqlite3.connect(settings.database_name)
 print("Opened database successfully")
 
-conn.execute('''CREATE TABLE RESULTS
+conn.execute(f"""CREATE TABLE {settings.results_table_name}
          (IDENTIFIER           TEXT    NOT NULL,
          STAGE_NUMBER            INTEGER     NOT NULL,
          INPUT_TEXT           TEXT,
          INPUT_LANG           TEXT,
-         TRANSLATED_TEXT           TEXT,
-         CLAIM_CHECK_WORTHINESS_RESULT TEXT,
-         EVIDENCE_RETRIVAL_RESULT TEXT,
-         STANCE_DETECTION_RESULT TEXT
-         );''')
+         {settings.results_translation_column_name}           TEXT,
+         {settings.results_translation_column_status}     TEXT,
+         {settings.results_claimworthiness_column_name} TEXT,
+         {settings.results_claimworthiness_column_status} TEXT,
+         {settings.results_evidenceretrival_column_name} TEXT,
+         {settings.results_evidenceretrival_column_status} TEXT,
+         {settings.results_stancedetection_column_name} TEXT,
+         {settings.results_stancedetection_column_status} TEXT,
+         STATUS TEXT,
+         VERSION TEXT
+         );""")
 
 print("Table created successfully")
 

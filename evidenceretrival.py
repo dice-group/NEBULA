@@ -1,5 +1,6 @@
 import threading
-
+import json
+from json import JSONDecodeError
 from elasticsearch import Elasticsearch
 
 import databasemanager
@@ -11,7 +12,7 @@ def doQuery(text):
         # Define the search query
         search_query = {
             "query": {
-                "match_phrase": {
+                "match": {
                     "query": text
                 }
             }
@@ -36,6 +37,9 @@ def retrive(text,identifier):
     else:
         # save the result in database
         databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrival_column_name, result, identifier)
+
+        if(result["hits"]["hits"] == []):
+            print("elastic search has no results")
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
