@@ -62,31 +62,42 @@ class MLP(torch.nn.Sequential):
         # instantiate chosen
         optimizer = optimizer(self.parameters(), lr=lr)
         loss_function = loss_function()
-        train_loss = 0.0
+        device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")  # FIXME pass the decision to user
 
-        # iterate epochs
+        train_losses = []
+        val_losses = []
         for epoch in range(epochs):
-            with tqdm(training_loader, unit="batch") as tepoch:  # show progress bar
+            train_loss_sum = 0
+            with tqdm(training_loader, unit="batch") as tepoch:  # show progress bar as we progress through batches
                 for inputs, labels in tepoch:
                     tepoch.set_description(f"Epoch {epoch}")
+                    inputs, labels = inputs.to(device), labels.to(device)  # pass to gpu (or not)
                     optimizer.zero_grad()  # set gradients to 0
                     outputs = self(inputs)  # predict labels
                     loss = loss_function(outputs, labels)  # compute loss between predictions and actual
                     loss.backward()  # backward pass
                     optimizer.step()  # optimize
 
-                    # Add loss
-                    train_loss = loss.item()/len(training_loader.sampler)
-                    tepoch.set_postfix(loss=train_loss)
-                    # sleep(0.1)
+                    # update progress bar with loss
+                    train_loss_sum += loss.item()
+                    tepoch.set_postfix(loss=loss.item())
 
+                train_losses.append(train_loss_sum / len(training_loader))
+
+                # evaluate on validation dataset if existing
                 if validation_loader:
-                    # TODO evaluate on validation split
-                    pass
+                    val_loss = 0
+                    with torch.set_grad_enabled(False):
+                        for x_val, y_val in validation_loader:
+                            x_val, y_val = x_val.to(device), y_val.to(device)
+                            val_pred = self(x_val)
+                            v_loss = loss_function(val_pred, y_val)
+                            val_loss += v_loss.item()
+                        val_losses.append(val_loss / len(validation_loader))
 
         # turn gradient tracking off
         self.train(False)
-        return loss
+        return train_losses, val_losses
 
     def test_model(self, x_test: torch.Tensor = None):
         self.eval()
