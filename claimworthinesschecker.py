@@ -4,6 +4,7 @@ import databasemanager
 import httpmanager
 import orchestrator
 import settings
+import utilities
 
 
 def check(text, identifier):
@@ -18,7 +19,7 @@ def check(text, identifier):
 
     # Send the POST request to the API and store the api response
     api_response = httpmanager.sendpostjson(api_endpoint, payload, request_headers)
-
+    api_response = utilities.make_standard_json(api_response)
     # Print out the JSON payload the API sent back
     print(str(api_response))
 

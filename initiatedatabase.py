@@ -3,12 +3,12 @@ import settings
 # initiate the database
 conn = sqlite3.connect(settings.database_name)
 print("Opened database successfully")
-
-conn.execute(f"""CREATE TABLE {settings.results_table_name}
+try:
+    conn.execute(f"""CREATE TABLE {settings.results_table_name}
          (IDENTIFIER           TEXT    NOT NULL,
          STAGE_NUMBER            INTEGER     NOT NULL,
-         INPUT_TEXT           TEXT,
-         INPUT_LANG           TEXT,
+         {settings.results_inputtext_column_name}           TEXT,
+         {settings.results_inputlang_column_name}           TEXT,
          {settings.results_translation_column_name}           TEXT,
          {settings.results_translation_column_status}     TEXT,
          {settings.results_claimworthiness_column_name} TEXT,
@@ -20,8 +20,13 @@ conn.execute(f"""CREATE TABLE {settings.results_table_name}
          STATUS TEXT,
          VERSION TEXT
          );""")
+    print("Table created successfully")
+except sqlite3.Error as error:
+    print("Failed to read data from sqlite table", error)
+finally:
+    if conn:
+        conn.close()
+        print("The SQLite connection is closed")
 
-print("Table created successfully")
 
-conn.close()
 

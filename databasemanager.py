@@ -82,7 +82,7 @@ def initiate_stage(identifier,text,lang):
         conn = sqlite3.connect(settings.database_name)
         cur = conn.cursor()
         cur.execute(
-            """INSERT INTO """ + settings.results_table_name + """ (IDENTIFIER,STAGE_NUMBER,INPUT_TEXT,INPUT_LANG) VALUES (?,?,?,?);""",
+            """INSERT INTO """ + settings.results_table_name + f""" (IDENTIFIER,STAGE_NUMBER,{settings.results_inputtext_column_name},{settings.results_inputlang_column_name}) VALUES (?,?,?,?);""",
             (identifier, str(0), text, lang))
         conn.commit()
     except sqlite3.Error as error:
@@ -96,16 +96,8 @@ def select_basedon_id(identifier):
     try:
         conn = sqlite3.connect(settings.database_name)
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM RESULTS where IDENTIFIER = '" + identifier + "'")
+        cursor.execute(f"SELECT * FROM {settings.results_table_name} where IDENTIFIER = '" + identifier + "'")
         record = cursor.fetchone()
-        """print("IDENTIFIER: " + str(record[0]))
-        print("STAGE_NUMBER: " + str(record[1]))
-        print("INPUT_TEXT: " + str(record[2]))
-        print("INPUT_LANG: " + str(record[3]))
-        print("TRANSLATED_TEXT: " + str(record[4]))
-        print("CLAIM_CHECK_WORTHINESS_RESULT: " + str(record[5]))
-        print("EVIDENCE_RETRIVAL_RESULT: " + str(record[6]))
-        print("STANCE_DETECTION_RESULT: " + str(record[7]))"""
         result = json.dumps(record)
         cursor.close()
     except sqlite3.Error as error:
