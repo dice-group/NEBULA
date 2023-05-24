@@ -45,6 +45,9 @@ class TestMLP(unittest.TestCase):
                     activation_layer=torch.nn.ReLU,
                     activation_output=torch.nn.Sigmoid,
                     inplace=False, bias=True, dropout=0.5)
+        logging.info(model)
+        # Expect 6 layers
+        # Linear(input) - BatchNorm - ReLu - Dropout - Linear - Sigmoid (output)
         self.assertEqual(sum(1 for _ in model.children()), 6)
 
         # train
