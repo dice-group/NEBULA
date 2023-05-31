@@ -4,7 +4,7 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-database_name = "test2.db"
+database_name = "db20230530.db"
 results_table_name="RESULTS"
 results_inputtext_column_name = "INPUT_TEXT"
 results_inputlang_column_name = "INPUT_LANG"
@@ -22,9 +22,8 @@ translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 claimbuster_apikey = os.getenv("API_KEY")
 claimbuster_api_endpoint = "https://idir.uta.edu/claimbuster/api/v2/score/text/sentences/"
 
-elasticsearch_index_name = "wiki"
+elasticsearch_index_name = "nebula"
 elasticsearch_api_endpoint = "http://nebulavm.cs.uni-paderborn.de:9200"
-elasticsearch_api_cert = os.getenv("ELASTICSEARCH_CERT")
 
 stancedetection_api = "http://localhost:8001/check/"
 

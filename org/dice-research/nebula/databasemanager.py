@@ -19,7 +19,6 @@ def update_step(which_table,which_step,which_result,row_identifier):
         print("Record Updated successfully ")
         cursor.close()
         #increase the stage
-        increaseTheStage(which_table, row_identifier)
     except sqlite3.Error as error:
         logging.error("Failed to update sqlite table", error)
         print("Failed to update sqlite table"+ str(error))
@@ -48,8 +47,7 @@ def getOne(which_table, row_identifier):
             sqliteconnection.close()
             logging.info("The SQLite connection is closed")
 
-# don't use this method until you just want to skip a level
-# this method will call in a update phase for each level
+# call after successfully run of a level
 def increaseTheStage(which_table,row_identifier):
     one = getOne(which_table,row_identifier)
     if one == None:

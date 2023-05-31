@@ -18,7 +18,9 @@ try:
          {settings.results_stancedetection_column_name} TEXT,
          {settings.results_stancedetection_column_status} TEXT,
          STATUS TEXT,
-         VERSION TEXT
+         VERSION TEXT,
+         ERROR_BODY TEXT,
+         CHECK_TIMESTAMP DATETIME
          );""")
     print("Table created successfully")
 except sqlite3.Error as error:

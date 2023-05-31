@@ -3,6 +3,9 @@ import uuid
 import databasemanager
 import orchestrator
 import threading
+import json
+from datetime import datetime
+import settings
 
 app = Flask(__name__)
 
@@ -44,8 +47,36 @@ def check():
     return Response("{\"id\": \"" + id + "\"}", status=200, mimetype='application/json')
 
 
+def doMapping(result):
+    tempjson = json.loads(result)
+    id = tempjson[0]
+    status = tempjson[12]
+    text = tempjson[2]
+    lang = tempjson[3]
+    veracity_score = 0.5
+    explanation =""
+    checkTimestamp = tempjson[15]
+    provenance = "{ \"check_timestamp\":\""+str(checkTimestamp)+"\", \"knowledge_date\":\"2023-05-30\",\"model_date\":\"2023-05-30\"}"
+    mapped_result = "{\"id\":\""+id+"\",\"status\":\""+status+"\",\"text\":\""+text+"\",\"lang\":\""+lang+"\",\"veracity_score\":"+str(veracity_score)+",\"explanation\":\""+explanation+"\",\"provenance\":"+provenance+"}"
+    return mapped_result
+
+
+
 @app.route('/status', methods=['GET', 'POST'])
 def status():
+    args = request.args
+    id = args.get('id')
+    if id is None:
+        return Response("{\"error\": \"id is required\"}", status=400, mimetype='application/json')
+    result = databasemanager.select_basedon_id(id)
+    if result is None or result == "null":
+        result = "{\"error\":\"nothing found with this id : " + id + "\"}"
+        return Response(result, status=400, mimetype='application/json')
+    mapped_result = doMapping(result)
+    return Response(mapped_result, status=200, mimetype='application/json')
+
+@app.route('/rawstatus', methods=['GET', 'POST'])
+def rawstatus():
     args = request.args
     id = args.get('id')
     if id is None:
