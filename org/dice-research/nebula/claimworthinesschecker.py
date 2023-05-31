@@ -4,7 +4,6 @@ import databasemanager
 import httpmanager
 import orchestrator
 import settings
-import utilities
 
 
 def check(text, identifier):
@@ -19,14 +18,14 @@ def check(text, identifier):
         payload = {"input_text": input_claim}
 
         # Send the POST request to the API and store the api response
-        api_response = httpmanager.sendpostjson(api_endpoint, payload, request_headers)
+        api_response = httpmanager.send_post_json(api_endpoint, payload, request_headers)
         # Print out the JSON payload the API sent back
         print(str(api_response))
 
         # save in the database
         databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_name,
                                     str(api_response), identifier)
-        databasemanager.increaseTheStage(settings.results_table_name, identifier)
+        databasemanager.increase_the_stage(settings.results_table_name, identifier)
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()

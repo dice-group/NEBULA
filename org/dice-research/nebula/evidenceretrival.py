@@ -7,7 +7,7 @@ import orchestrator
 import settings
 
 
-def doQuery(text):
+def do_query(text):
     try:
         es = Elasticsearch(settings.elasticsearch_api_endpoint)
         # Define the search query
@@ -35,18 +35,20 @@ def doQuery(text):
 
 
 def generate_result_tosave(all_results):
-    result =  "{\"evidences\":["
+    result = "{\"evidences\":["
     counter = 0
     for r in all_results:
         result += r
-        counter=counter+1
+        counter = counter + 1
         if counter < len(all_results):
             result += ","
     result += "]}"
     return result
 
+
 def generate_one_block_of_result(resultOfQueries, originatlTextForQuery):
     return "{\"result\":" + str(resultOfQueries) + ",\"query\":\"" + str(originatlTextForQuery) + "\"}"
+
 
 """def retrive(text,identifier):
     result = doQuery(text)
@@ -73,17 +75,19 @@ def generate_one_block_of_result(resultOfQueries, originatlTextForQuery):
 #                         'index': 1, 'score': 0.7661571161}, {'text': '2022', 'index': 2, 'score': 0.37916248}]}
 
 """
-def retrive(input,identifier):
+
+
+def retrive(input, identifier):
     try:
         allResults = []
         for claim in input["results"]:
             text = claim["text"]
-            result = doQuery(text)
+            result = do_query(text)
             allResults.append(generate_one_block_of_result(result, text))
         tosave = generate_result_tosave(allResults)
         databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrival_column_name, tosave,
                                     identifier)
-        databasemanager.increaseTheStage(settings.results_table_name, identifier)
+        databasemanager.increase_the_stage(settings.results_table_name, identifier)
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()

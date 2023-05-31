@@ -48,7 +48,7 @@ def getOne(which_table, row_identifier):
             logging.info("The SQLite connection is closed")
 
 # call after successfully run of a level
-def increaseTheStage(which_table,row_identifier):
+def increase_the_stage(which_table, row_identifier):
     one = getOne(which_table,row_identifier)
     if one == None:
         logging.warning("There are no results for this query")

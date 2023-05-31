@@ -16,7 +16,7 @@ def test():
     return Response("{\"test\": \"ok\"}", status=200, mimetype='application/json')
 
 
-def startpipeline(text, lang):
+def start_pipeline(text, lang):
     identifier = str(uuid.uuid4().hex)
     databasemanager.initiate_stage(identifier, text, lang)
     # call orchestrator
@@ -42,12 +42,12 @@ def check():
         return Response("{\"error\": \"send the string as [text] argument in query string or body\"}", status=400,
                         mimetype='application/json')
     text = trim(text)
-    id = startpipeline(text, lang)
+    id = start_pipeline(text, lang)
 
     return Response("{\"id\": \"" + id + "\"}", status=200, mimetype='application/json')
 
 
-def doMapping(result):
+def do_mapping(result):
     tempjson = json.loads(result)
     id = tempjson[0]
     status = tempjson[12]
@@ -72,11 +72,11 @@ def status():
     if result is None or result == "null":
         result = "{\"error\":\"nothing found with this id : " + id + "\"}"
         return Response(result, status=400, mimetype='application/json')
-    mapped_result = doMapping(result)
+    mapped_result = do_mapping(result)
     return Response(mapped_result, status=200, mimetype='application/json')
 
 @app.route('/rawstatus', methods=['GET', 'POST'])
-def rawstatus():
+def raw_status():
     args = request.args
     id = args.get('id')
     if id is None:

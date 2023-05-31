@@ -1,11 +1,10 @@
 import threading
 
 import databasemanager
-import httpmanager
 import orchestrator
 import settings
 import nltk
-import json
+
 nltk.download('punkt')
 nltk.download('stopwords')
 from nltk.corpus import stopwords
@@ -14,10 +13,11 @@ from nltk.tokenize import word_tokenize
 similarity_array = []
 
 stopwords = nltk.corpus.stopwords.words('english')
-CustomListofWordstoExclude = ["'s",'say','says','said','s',"n't"]
+CustomListofWordstoExclude = ["'s", 'say', 'says', 'said', 's', "n't"]
 stopwords.extend(CustomListofWordstoExclude)
 
-def calculatescore(maintext,claim):
+
+def calculate_score(maintext, claim):
     data_text = maintext
     data_title = claim
     X_list = word_tokenize(str(data_title))
@@ -53,24 +53,24 @@ def calculatescore(maintext,claim):
         cosine = c / float((sum(l1) * sum(l2)) ** 0.5)
     except ZeroDivisionError:
         cosine = 0
-    #print("similarity: ", cosine)
+    # print("similarity: ", cosine)
     return str(cosine)
 
-def doQuery(maintext, claim):
+
+def do_query(maintext, claim):
     # Define the endpoint (url), payload (sentence to be scored), api-key (api-key is sent as an extra header)
-    #api_endpoint = settings.stancedetection_api
+    # api_endpoint = settings.stancedetection_api
 
     # Send the POST request to the API and store the api response
-    #api_response = httpmanager.sendget(api_endpoint, f"""{maintext}/{claim}""")
+    # api_response = httpmanager.sendget(api_endpoint, f"""{maintext}/{claim}""")
 
     # Print out the JSON payload the API sent back
 
-
-    return calculatescore(maintext, claim)
+    return calculate_score(maintext, claim)
 
 
 def detect(main_text, claim, identifier):
-    result = doQuery(main_text, claim)
+    result = do_query(main_text, claim)
     if result is None:
         print("error in retrieving the evidences")
     else:
@@ -82,21 +82,25 @@ def detect(main_text, claim, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
 
+
 def generate_result_tosave(all_results):
-    result =  "{\"stances\":["
+    result = "{\"stances\":["
     counter = 0
     for r in all_results:
         result += r
-        counter=counter+1
+        counter = counter + 1
         if counter < len(all_results):
             result += ","
     result += "]}"
     return result
+
+
 def generate_one_block_of_result(claim, text, url, elastic_score, stance_score):
-    return "{\"claim\":\"" + str(claim) + "\",\"text\":\"" + str(text) + "\",\"url\":\""+str(url)+"\",\"elastic_score\":"+str(elastic_score)+",\"stance_score\":"+str(stance_score)+"}"
+    return "{\"claim\":\"" + str(claim) + "\",\"text\":\"" + str(text) + "\",\"url\":\"" + str(
+        url) + "\",\"elastic_score\":" + str(elastic_score) + ",\"stance_score\":" + str(stance_score) + "}"
 
 
-def calculate(evidences,identifier):
+def calculate(evidences, identifier):
     allResults = []
     for evidence in evidences:
         result = evidence["result"]
@@ -105,12 +109,13 @@ def calculate(evidences,identifier):
             text = hit["_source"]["text"]
             url = hit["_source"]["url"]
             elastic_score = hit["_score"]
-            stance_score = doQuery(text, claim)
+            stance_score = do_query(text, claim)
             allResults.append(generate_one_block_of_result(claim, text, url, elastic_score, stance_score))
     tosave = generate_result_tosave(allResults)
 
-    databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,identifier)
-    databasemanager.increaseTheStage(settings.results_table_name, identifier)
+    databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,
+                                identifier)
+    databasemanager.increase_the_stage(settings.results_table_name, identifier)
     # go next level
     thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
     thread.start()

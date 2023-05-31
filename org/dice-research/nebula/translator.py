@@ -3,7 +3,7 @@ import httpmanager
 import settings
 import databasemanager
 import orchestrator
-def sendTranslationRequest(textToTranslate, identifier):
+def send_translation_request(textToTranslate, identifier):
     try:
         data = {
             "components": "mbart_mt",
@@ -12,13 +12,13 @@ def sendTranslationRequest(textToTranslate, identifier):
             }
         headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
 
-        result = httpmanager.sendpost(settings.translatorEndpoint, data, headers)
+        result = httpmanager.send_post(settings.translatorEndpoint, data, headers)
 
         result = result.replace("\""," ")
 
         # save the result in database
         databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, result, identifier)
-        databasemanager.increaseTheStage(settings.results_table_name, identifier)
+        databasemanager.increase_the_stage(settings.results_table_name, identifier)
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()

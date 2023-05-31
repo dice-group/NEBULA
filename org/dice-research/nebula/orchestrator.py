@@ -32,14 +32,14 @@ def goNextLevel(identifier):
         if INPUT_LANG!="en":
             # start the translation step
             print("translation step")
-            thread = threading.Thread(target=translator.sendTranslationRequest, args=(INPUT_TEXT, identifier))
+            thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
             thread.start()
         else:
             #update the stage
             print("skip the translation")
             #databasemanager.increaseTheStage(settings.results_table_name, identifier)
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, INPUT_TEXT, identifier)
-            databasemanager.increaseTheStage(settings.results_table_name, identifier)
+            databasemanager.increase_the_stage(settings.results_table_name, identifier)
             goNextLevel(identifier)
         pass
     elif next_stage == 2:
