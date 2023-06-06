@@ -135,3 +135,10 @@ class MLP(torch.nn.Sequential):
         self.eval()
         with torch.no_grad():
             return self(x_test)
+
+
+class RNN(torch.nn.RNN):
+    def __init__(self, *args, **kwargs):
+        super().__init__('RNN_RELU', *args, **kwargs)
+
+    

@@ -18,17 +18,17 @@ np.random.seed(seed)
 torch.manual_seed(seed)
 
 
-class TestMLP(unittest.TestCase):
+class TestModel(unittest.TestCase):
     """
-        Sanity Check of the MLP
+        Sanity Check of the models
     """
 
-    def test_train(self):
+    def test_mlp(self):
         """
-        Sample train run
+        Sample train run of the MLP
         :return:
         """
-        x_train = np.random.randint(0, 2, size=(5, 10)).astype(np.float32)  # dummy input
+        x_train = np.random.randint(-1, 2, size=(5, 10)).astype(np.float32)  # dummy input
         y_train = np.random.randint(0, 2, size=(5, 1)).astype(np.float32)  # dummy labels
 
         # convert to data loader
@@ -62,6 +62,15 @@ class TestMLP(unittest.TestCase):
         # predict
         x_test = np.random.randint(0, 2, size=(1, 10)).astype(np.float32)
         model.test_model(torch.from_numpy(x_test))
+
+    def test_rnn(self):
+        x_train = np.random.randint(0, 2, size=(5, 10)).astype(np.float32)  # dummy input
+        y_train = np.random.randint(0, 2, size=(5, 1)).astype(np.float32)  # dummy labels
+
+        input_size = np.shape(x_train)[1]
+        rnn = torch.nn.RNN(input_size=input_size,
+                           hidden_size=2, num_layers=1, nonlinearity='relu', bias=True,
+                           batch_first=False, dropout=0.0, bidirectional=False)
 
 
 if __name__ == '__main__':
