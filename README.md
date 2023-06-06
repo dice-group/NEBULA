@@ -1,4 +1,17 @@
 # Nebula Application
+## Environment
+You can use a venv or a conda environment:
+```
+virtualenv -p python3.8.10 nebula
+source nebula/bin/activate
+pip install -r requirements.txt
+```
+```
+conda create -n nebula python=3.8.10
+conda activate nebula
+pip install -r requirements.txt
+```
+
 ## Running the Application
 To run the application, simply execute the main.py file using the command:
 ```
