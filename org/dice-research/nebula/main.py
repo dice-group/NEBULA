@@ -90,7 +90,7 @@ def raw_status():
     return Response(result, status=200, mimetype='application/json')
 
 @app.route('/textsearch', methods=['GET', 'POST'])
-def raw_status():
+def textsearch():
     args = request.args
     text = args.get('text')
     result = databasemanager.select_basedon_id(id)
