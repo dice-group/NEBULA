@@ -105,3 +105,19 @@ def select_basedon_id(identifier):
             conn.close()
             print("The SQLite connection is closed")
     return result
+
+def select_basedon_text(text):
+    try:
+        conn = sqlite3.connect(settings.database_name)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {settings.results_table_name} where {settings.results_translation_column_name} = '" + text + "'")
+        record = cursor.fetchone()
+        result = json.dumps(record)
+        cursor.close()
+    except sqlite3.Error as error:
+        print("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+            print("The SQLite connection is closed")
+    return result

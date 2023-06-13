@@ -2,6 +2,7 @@ import json
 from json import JSONDecodeError
 
 import claimworthinesschecker
+import claimworthinesscheckerdummy
 import databasemanager
 import evidenceretrival
 import settings
@@ -44,8 +45,12 @@ def goNextLevel(identifier):
         pass
     elif next_stage == 2:
         #claim
-        thread = threading.Thread(target=claimworthinesschecker.check, args=(TRANSLATED_TEXT, identifier))
-        thread.start()
+        if settings.module_claimworthiness == "dummy":
+            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(TRANSLATED_TEXT, identifier))
+            thread.start()
+        else:
+            thread = threading.Thread(target=claimworthinesschecker.check, args=(TRANSLATED_TEXT, identifier))
+            thread.start()
         pass
     elif next_stage == 3:
         #evidence retrival
@@ -103,6 +108,7 @@ def goNextLevel(identifier):
 
         pass
     elif next_stage == 5:
+        databasemanager.update_step(settings.results_table_name, "STATUS", "done", identifier)
         print("not developed yet")
         pass
     elif next_stage == 6:
