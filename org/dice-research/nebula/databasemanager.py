@@ -110,9 +110,18 @@ def select_basedon_text(text):
     try:
         conn = sqlite3.connect(settings.database_name)
         cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM {settings.results_table_name} where {settings.results_translation_column_name} = '" + text + "'")
-        record = cursor.fetchone()
-        result = json.dumps(record)
+        cursor.execute(f"SELECT * FROM {settings.results_table_name} where {settings.results_inputtext_column_name} = '" + text + "'")
+        record = cursor.fetchall()
+
+        allresults = []
+        for row in record:
+            row_dic = {}
+            for idx, col in enumerate(cursor.description):
+                row_dic[col[0]] = row[idx]
+                print(col[0])
+                print(row[idx])
+            allresults.append(row_dic)
+        finalJson = json.dumps(allresults)
         cursor.close()
     except sqlite3.Error as error:
         print("Failed to read data from sqlite table", error)
@@ -120,4 +129,4 @@ def select_basedon_text(text):
         if conn:
             conn.close()
             print("The SQLite connection is closed")
-    return result
+    return finalJson

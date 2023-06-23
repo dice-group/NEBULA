@@ -93,11 +93,11 @@ def raw_status():
 def textsearch():
     args = request.args
     text = args.get('text')
-    result = databasemanager.select_basedon_id(id)
+    result = databasemanager.select_basedon_text(text)
     if result is None or result == "null":
-        result = "{\"error\":\"nothing found with this id : " + id + "\"}"
+        result = "{\"error\":\"nothing found with this text : " + text + "\"}"
         return Response(result, status=400, mimetype='application/json')
-    return Response(result, status=200, mimetype='application/json')
+    return Response("{\"results\": "+result+"}", status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':
