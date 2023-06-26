@@ -1,3 +1,4 @@
+import logging
 import threading
 
 import databasemanager
@@ -9,6 +10,7 @@ nltk.download('punkt')
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+
 
 similarity_array = []
 
@@ -72,7 +74,7 @@ def do_query(maintext, claim):
 def detect(main_text, claim, identifier):
     result = do_query(main_text, claim)
     if result is None:
-        print("error in retrieving the evidences")
+        logging.error("error in retrieving the evidences")
     else:
         # save the result in database
         databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, result,

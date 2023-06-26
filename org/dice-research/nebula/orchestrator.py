@@ -1,4 +1,5 @@
 import json
+import logging
 from json import JSONDecodeError
 
 import claimworthinesschecker
@@ -11,8 +12,9 @@ from datetime import datetime
 
 import stancedetection
 import translator
+
+
 def goNextLevel(identifier):
-    print("orch:"+identifier)
     current = databasemanager.getOne(settings.results_table_name, identifier)
     STAGE_NUMBER = current[1]
     INPUT_TEXT = current[2]
@@ -21,9 +23,9 @@ def goNextLevel(identifier):
     CLAIM_CHECK_WORTHINESS_RESULT = current[6]
     EVIDENCE_RETRIVAL_RESULT = current[8]
     if current==None:
-        print("could not find this row in database " + identifier)
+        logging.error("could not find this row in database " + identifier)
     current_stage = int(STAGE_NUMBER)
-    print("curront stage is : "+str(current_stage))
+    logging.info("curront stage is : "+str(current_stage))
     next_stage = current_stage + 1
     if next_stage == 1:
         databasemanager.update_step(settings.results_table_name, "STATUS", "ongoing", identifier)
@@ -32,12 +34,12 @@ def goNextLevel(identifier):
         # language
         if INPUT_LANG!="en":
             # start the translation step
-            print("translation step")
+            logging.info("translation step")
             thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
             thread.start()
         else:
             #update the stage
-            print("skip the translation")
+            logging.info("skip the translation")
             #databasemanager.increaseTheStage(settings.results_table_name, identifier)
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, INPUT_TEXT, identifier)
             databasemanager.increase_the_stage(settings.results_table_name, identifier)
@@ -55,7 +57,7 @@ def goNextLevel(identifier):
     elif next_stage == 3:
         #evidence retrival
         if CLAIM_CHECK_WORTHINESS_RESULT==None:
-            print("error : the claims worthiness response is null")
+            logging.error("error : the claims worthiness response is null")
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", "the claims worthiness response is null", identifier)
         try:
@@ -83,13 +85,13 @@ def goNextLevel(identifier):
                                           args=(jsonCheckdClaimsForWorthiness, identifier))
             thread.start()
         except JSONDecodeError as exp:
-            print(exp.msg)
+            logging.error(exp.msg)
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(exp.msg), identifier)
         pass
     elif next_stage == 4:
         try:
-            print("stance detection")
+            logging.info("stance detection")
             tempjson = json.loads(EVIDENCE_RETRIVAL_RESULT)
             temp_evidences = tempjson["evidences"]
 
@@ -102,14 +104,14 @@ def goNextLevel(identifier):
             thread.start()
             #stance detection
         except Exception as e:
-            print(e)
+            logging.error(str(e))
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
 
         pass
     elif next_stage == 5:
         databasemanager.update_step(settings.results_table_name, "STATUS", "done", identifier)
-        print("not developed yet")
+        logging.info("not developed yet")
         pass
     elif next_stage == 6:
         pass

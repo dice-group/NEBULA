@@ -1,3 +1,4 @@
+import logging
 import threading
 
 import databasemanager
@@ -6,7 +7,6 @@ import settings
 
 """This class is designed to store an incoming text as a single claim. It is used for datasets that consist of 
 individual claims rather than large blocks of text."""
-
 
 def check(text, identifier):
     try:
@@ -20,5 +20,6 @@ def check(text, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
+        logging.error(str(e))
         databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
         databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
