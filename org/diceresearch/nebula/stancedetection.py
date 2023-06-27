@@ -1,3 +1,4 @@
+import logging
 import threading
 
 import databasemanager
@@ -9,6 +10,7 @@ nltk.download('punkt')
 nltk.download('stopwords')
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+
 
 similarity_array = []
 
@@ -24,7 +26,7 @@ def calculate_score(maintext, claim):
     Y_list = word_tokenize(str(data_text))
     # print(X_list.size)
     sw = stopwords
-    l1 = [];
+    l1 = []
     l2 = []
     X_set = {w for w in X_list if not w in sw}
     Y_set = {w for w in Y_list if not w in sw}
@@ -72,7 +74,7 @@ def do_query(maintext, claim):
 def detect(main_text, claim, identifier):
     result = do_query(main_text, claim)
     if result is None:
-        print("error in retrieving the evidences")
+        logging.error("error in retrieving the evidences")
     else:
         # save the result in database
         databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, result,
