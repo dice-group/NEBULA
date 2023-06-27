@@ -1,8 +1,10 @@
+import logging
 import threading
 import httpmanager
 import settings
 import databasemanager
 import orchestrator
+
 def send_translation_request(textToTranslate, identifier):
     try:
         data = {
@@ -23,6 +25,7 @@ def send_translation_request(textToTranslate, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
+        logging.error(str(e))
         databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
         databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
 

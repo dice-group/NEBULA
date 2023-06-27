@@ -1,11 +1,11 @@
 import json
+import logging
 import threading
 from elasticsearch import Elasticsearch
 
 import databasemanager
 import orchestrator
 import settings
-
 
 def do_query(text):
     try:
@@ -26,11 +26,11 @@ def do_query(text):
 
         for hit in response["hits"]["hits"]:
             # Access the document fields
-            print(hit["_source"])
+            logging.info(hit["_source"])
 
         return json.dumps(response.raw)
     except Exception as ex:
-        print(str(ex))
+        logging.error(str(ex))
         return None
 
 

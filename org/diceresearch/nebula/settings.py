@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import logging
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,6 +20,8 @@ results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
 
 translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 
+#claimbuster, dummy
+module_claimworthiness = "dummy"
 claimbuster_apikey = os.getenv("API_KEY")
 claimbuster_api_endpoint = "https://idir.uta.edu/claimbuster/api/v2/score/text/sentences/"
 
