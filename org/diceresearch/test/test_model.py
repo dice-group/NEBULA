@@ -1,16 +1,13 @@
 import logging
 import unittest
+from logging.config import fileConfig
 
 import numpy as np
 import torch
 
 from org.diceresearch.nebula.veracity_detection.model import MLP
 
-# FIXME create logging config file
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%d-%m-%Y %H:%M:%S')
+fileConfig('test_logging.ini')
 
 # to ensure deterministic behaviour
 seed = 1
@@ -29,7 +26,7 @@ class TestModel(unittest.TestCase):
         :return:
         """
         x_train = np.random.randint(-1, 2, size=(5, 10)).astype(np.float32)  # dummy input
-        y_train = np.random.randint(0, 2, size=(5, 1)).astype(np.float32)  # dummy labels
+        y_train = np.random.randint(0, 2, size=(5)).astype(np.float32)  # dummy labels
 
         # convert to data loader
         train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(x_train), torch.from_numpy(y_train))
@@ -62,6 +59,7 @@ class TestModel(unittest.TestCase):
         # predict
         x_test = np.random.randint(0, 2, size=(1, 10)).astype(np.float32)
         model.test_model(torch.from_numpy(x_test))
+
 
 if __name__ == '__main__':
     unittest.main()

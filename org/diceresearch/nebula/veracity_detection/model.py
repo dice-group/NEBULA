@@ -1,7 +1,10 @@
+import datetime
+import logging
 from typing import List, Optional, Callable
 
 import torch
 from torch.utils.tensorboard import SummaryWriter
+from torchmetrics import Accuracy
 from tqdm import tqdm
 
 
@@ -101,20 +104,24 @@ class MLP(torch.nn.Sequential):
         for epoch in range(epochs):
             train_loss_sum = 0
             with tqdm(training_loader, unit="batch") as tepoch:  # show progress bar as we progress through batches
+                n_batches_processed = 0
                 for inputs, labels in tepoch:
                     tepoch.set_description(f"Epoch {epoch}")
                     inputs, labels = inputs.to(device), labels.to(device)  # pass to gpu (or not)
                     optimizer.zero_grad()  # set gradients to 0
-                    outputs = self(inputs)  # predict labels
+                    outputs = self(inputs).reshape(-1)  # predict labels
                     loss = loss_function(outputs, labels)  # compute loss between predictions and actual
                     loss.backward()  # backward pass
                     optimizer.step()  # optimize
 
                     # update progress bar with loss
                     train_loss_sum += loss.item()
-                    tepoch.set_postfix(loss=loss.item())
+                    n_batches_processed += 1
+                    tepoch.set_postfix(loss=train_loss_sum / n_batches_processed)
 
-                train_losses.append(train_loss_sum / len(training_loader))
+                epoch_loss = train_loss_sum / len(training_loader)
+                train_losses.append(epoch_loss)
+                logging.debug('Epoch {0} Training loss {1}'.format(epoch, epoch_loss))
 
                 # evaluate on validation dataset if existing
                 if validation_loader:
