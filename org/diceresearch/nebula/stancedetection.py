@@ -12,6 +12,8 @@ from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 
 
+logging.basicConfig(level = logging.INFO)
+
 similarity_array = []
 
 stopwords = nltk.corpus.stopwords.words('english')

@@ -9,6 +9,8 @@ import settings
 
 app = Flask(__name__)
 
+
+
 @app.route('/test')
 @app.route('/default')
 def test():

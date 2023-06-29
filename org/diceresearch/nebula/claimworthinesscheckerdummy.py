@@ -8,6 +8,7 @@ import settings
 """This class is designed to store an incoming text as a single claim. It is used for datasets that consist of 
 individual claims rather than large blocks of text."""
 
+logging.basicConfig(level = logging.INFO)
 def check(text, identifier):
     try:
         dummy_response = "{\"version\":\"dummy\",\"sentences\":\" " + text + " \",\"results\":[{\"text\":\" " + text + "\",\"index\":0,\"score\":1}]}"

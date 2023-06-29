@@ -5,6 +5,8 @@ import settings
 import databasemanager
 import orchestrator
 
+logging.basicConfig(level = logging.INFO)
+
 def send_translation_request(textToTranslate, identifier):
     try:
         data = {

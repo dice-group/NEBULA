@@ -13,6 +13,7 @@ from datetime import datetime
 import stancedetection
 import translator
 
+logging.basicConfig(level = logging.INFO)
 
 def goNextLevel(identifier):
     current = databasemanager.getOne(settings.results_table_name, identifier)

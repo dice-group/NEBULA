@@ -6,6 +6,7 @@ import httpmanager
 import orchestrator
 import settings
 
+logging.basicConfig(level = logging.INFO)
 def check(text, identifier):
     try:
         # /api/v2/score/text/sentences/<input_text>

@@ -7,6 +7,8 @@ import databasemanager
 import orchestrator
 import settings
 
+logging.basicConfig(level = logging.INFO)
+
 def do_query(text):
     try:
         es = Elasticsearch(settings.elasticsearch_api_endpoint)

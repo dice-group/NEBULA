@@ -2,6 +2,7 @@ import logging
 import settings
 import requests
 
+logging.basicConfig(level = logging.INFO)
 
 # Set the data to be sent in the POST request
 # data = {
