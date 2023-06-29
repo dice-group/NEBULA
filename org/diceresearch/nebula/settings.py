@@ -18,6 +18,8 @@ results_evidenceretrival_column_status = "EVIDENCE_RETRIVAL_RESULT_STATUS"
 results_stancedetection_column_name = "STANCE_DETECTION_RESULT"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
 
+skipTranstaltion = True
+
 translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 
 #claimbuster, dummy
@@ -31,3 +33,5 @@ elasticsearch_api_endpoint = "http://nebulavm.cs.uni-paderborn.de:9200"
 stancedetection_api = "http://localhost:8001/check/"
 
 run_evidence_retrival_bulk_or_single = "single"
+
+crrApi = "http://localhost:9000"

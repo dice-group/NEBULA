@@ -33,10 +33,19 @@ def goNextLevel(identifier):
         #translate
         # language
         if INPUT_LANG!="en":
-            # start the translation step
-            logging.info("translation step")
-            thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
-            thread.start()
+            if(settings.skipTranstaltion):
+                # update the stage
+                logging.info("skip the translation")
+                # databasemanager.increaseTheStage(settings.results_table_name, identifier)
+                databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
+                                            INPUT_TEXT, identifier)
+                databasemanager.increase_the_stage(settings.results_table_name, identifier)
+                goNextLevel(identifier)
+            else:
+                # start the translation step
+                logging.info("translation step")
+                thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
+                thread.start()
         else:
             #update the stage
             logging.info("skip the translation")
