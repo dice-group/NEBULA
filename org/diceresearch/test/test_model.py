@@ -5,6 +5,7 @@ from logging.config import fileConfig
 import numpy as np
 import torch
 
+from org.diceresearch.nebula.data.dataset import StanceDataset
 from org.diceresearch.nebula.veracity_detection.model import MLP
 
 fileConfig('test_logging.ini')
@@ -25,11 +26,12 @@ class TestModel(unittest.TestCase):
         Sample train run of the MLP
         :return:
         """
+        ids_train = np.arange(1, 6)     # dummy labels
         x_train = np.random.randint(-1, 2, size=(5, 10)).astype(np.float32)  # dummy input
         y_train = np.random.randint(0, 2, size=(5)).astype(np.float32)  # dummy labels
 
         # convert to data loader
-        train_dataset = torch.utils.data.TensorDataset(torch.from_numpy(x_train), torch.from_numpy(y_train))
+        train_dataset = StanceDataset(claim_id=ids_train, evidence_ids=list(), stance_scores=x_train, label=y_train)
         train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=3, shuffle=True)
 
         input_size = np.shape(x_train)[1]  # input size will serve as input neurons size
