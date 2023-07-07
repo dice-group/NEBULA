@@ -111,7 +111,7 @@ class MLP(torch.nn.Sequential):
                     labels = sample['labels']
                     inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
                     optimizer.zero_grad()  # set gradients to 0
-                    outputs = self(inputs).reshape(-1)  # predict labels
+                    outputs = self(inputs) #.reshape(-1)  # predict labels
                     loss = loss_function(outputs, labels)  # compute loss between predictions and actual
                     loss.backward()  # backward pass
                     optimizer.step()  # optimize
@@ -150,7 +150,23 @@ class MLP(torch.nn.Sequential):
         results = list()
         for sample in tqdm(test_loader):
             scores = sample['scores']
-            output = self(scores).reshape(-1)
+            output = self(scores).reshape(-1).detach().numpy()
             sample['predicted_label'] = output
             results.append(sample)
         return results
+
+class FocalLoss(torch.nn.Module):
+    def __init__(self, gamma=2, alpha=None):
+        super(FocalLoss, self).__init__()
+        self.gamma = gamma
+        self.alpha = alpha
+
+    def forward(self, inputs, targets):
+        ce_loss = torch.nn.functional.binary_cross_entropy(inputs, targets, reduction='none')
+        pt = torch.exp(-ce_loss)
+        focal_loss = (1 - pt) ** self.gamma * ce_loss
+
+        if self.alpha is not None:
+            focal_loss = self.alpha * focal_loss
+
+        return focal_loss.mean()
