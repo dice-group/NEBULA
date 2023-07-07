@@ -10,6 +10,7 @@ import evidenceretrival
 import settings
 import stancedetection
 import translator
+from org.diceresearch.nebula.veracity_detection import predictions
 
 
 def goNextLevel(identifier):
@@ -21,6 +22,7 @@ def goNextLevel(identifier):
     TRANSLATED_TEXT = current[4]
     CLAIM_CHECK_WORTHINESS_RESULT = current[6]
     EVIDENCE_RETRIVAL_RESULT = current[8]
+    STANCE_DETECTION_RESULT = current[10]
     if current == None:
         logging.info("could not find this row in database " + identifier)
     current_stage = int(STAGE_NUMBER)
@@ -83,7 +85,7 @@ def goNextLevel(identifier):
                                       args=(jsonCheckdClaimsForWorthiness, identifier))
             thread.start()
         except JSONDecodeError as exp:
-            print(exp.msg)
+            logging.error(exp.msg)
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(exp.msg), identifier)
         pass
@@ -102,13 +104,23 @@ def goNextLevel(identifier):
             thread.start()
             # stance detection
         except Exception as e:
-            logging.info(e)
+            logging.error(e)
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
     elif next_stage == 5:
-        logging.info("Query the trained model")
-
-
+        logging.info('Query the trained model')
+        if STANCE_DETECTION_RESULT == None:
+            logging.error('There\'s no stance scores to process')
+        else:
+            try:
+                tempjson = json.loads(STANCE_DETECTION_RESULT)
+                thread = threading.Thread(target=predictions.predict,
+                                          args=(tempjson, identifier))
+                thread.start()
+            except Exception as e:
+                logging.error(e)
+                databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
+                databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
     elif next_stage == 6:
         pass
     elif next_stage == 7:
