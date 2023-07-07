@@ -1,33 +1,15 @@
 from collections import Counter
 
-import numpy as np
+import pandas as pd
 import torch
-from imblearn.over_sampling import RandomOverSampler
 from torch.utils.data import Dataset
+from tqdm import tqdm
 
 label_dict = {
-    "SUPPORTS": 2,
-    "NOT ENOUGH INFO": 1,
+    "SUPPORTS": 1,
+    "NOT ENOUGH INFO": 0.5,
     "REFUTES": 0
 }
-
-class_counts = Counter()
-
-
-class MultiOverSamplingSampler:
-    def __init__(self, dataset):
-        self.dataset = dataset
-        self.over_sampler = RandomOverSampler(sampling_strategy='not majority')
-
-    def __iter__(self):
-        # Perform oversampling on the underrepresented classes
-        over_sampled, _ = self.over_sampler.fit_resample(
-            X=self.dataset.stance_scores, y=self.dataset.label
-        )
-        return iter(over_sampled)
-
-    def __len__(self):
-        return len(self.dataset)
 
 
 class StanceDataset(Dataset):
@@ -51,6 +33,7 @@ class StanceDataset(Dataset):
         :param kwargs:
         """
         jsonl = kwargs.get('jsonl')
+        self.class_counts = Counter()
         if jsonl is None:
             self.claim_id = kwargs.get('claim_id')
             self.evidence_ids = kwargs.get('evidence_ids')
@@ -62,27 +45,47 @@ class StanceDataset(Dataset):
             self.stance_scores = list()
             self.label = list()
 
-            for item in jsonl:
-                self.claim_id.append(item['id'])
-                # self.label.append(label_dict[item['label']])
-                one_hot_encoded = torch.zeros(3, dtype=torch.float32)
-                one_hot_encoded[label_dict[item['label']]] = 1
-                class_counts.update([str(one_hot_encoded)])
-                self.label.append(one_hot_encoded)
-                scores = item['scores']
-                l_scores = list()
-                # TODO add limit of k scores, zero pad the ones less than k
-                for score in scores:
-                    l_scores.append(score['stance_score'])
-                self.stance_scores.append(l_scores)
+            p_bar = tqdm(jsonl)
+            for item in p_bar:
+                p_bar.set_description("Processing dataset")
+                self.claim_id.append(int(item['id']))
+                self.label.append(label_dict[item['label']])
+
+                # One hot encode vectors
+                # one_hot_encoded = torch.zeros(3, dtype=torch.float32)
+                # one_hot_encoded[label_dict[item['label']]] = 1
+                # self.label.append(one_hot_encoded)
+
+                # count class frequency
+                self.class_counts.update([item['label']])
+
+                # get top k scores to use as evidence, ignore if done already
+                scores_t = item['scores']
+                df = pd.DataFrame(scores_t)
+                scores = torch.tensor(df.stance_score, dtype=torch.float32)
+                k = kwargs.get('k')
+                if k < len(scores):
+                    top_k_values, _ = torch.topk(scores, k=k)
+                elif k == len(scores):
+                    top_k_values = scores
+                else:
+                    # TODO should we scale down to the scores we have or zero pad the difference?
+                    top_k_values = scores
+                self.stance_scores.append(top_k_values)
+
+            # TODO balance the dataset by oversampling the minority classes
+            # classes_dist=list(self.class_counts.values())
+            # if classes_dist.count(classes_dist[0]) != len(classes_dist):
+            #     self.sampler = RandomOverSampler(sampling_strategy='not majority')
+            #     self.sampled_indices, _ = self.sampler.fit_resample(self.stance_scores, self.label)
 
     def __len__(self):
         return len(self.claim_id)
 
     def __getitem__(self, index):
-        sample = {'claim_id': self.claim_id[index],
-                  'scores': np.asarray(self.stance_scores[index], dtype=np.float32),
-                  'labels': np.float32(self.label[index])}
+        sample = {'claim_id': torch.tensor(self.claim_id[index], dtype=torch.int),
+                  'scores': torch.tensor(self.stance_scores[index], dtype=torch.float32),
+                  'labels': torch.tensor(self.label[index], dtype=torch.float32)}
         return sample
 
 # class WiseDataset(Dataset):
