@@ -5,6 +5,7 @@ from datetime import datetime
 from json import JSONDecodeError
 
 import claimworthinesschecker
+import claimworthinesscheckerdummy
 import databasemanager
 import evidenceretrival
 import settings
@@ -49,13 +50,17 @@ def goNextLevel(identifier):
             goNextLevel(identifier)
         pass
     elif next_stage == 2:
-        # claim
-        thread = threading.Thread(target=claimworthinesschecker.check, args=(TRANSLATED_TEXT, identifier))
-        thread.start()
+        #claim
+        if settings.module_claimworthiness == "dummy":
+            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(TRANSLATED_TEXT, identifier))
+            thread.start()
+        else:
+            thread = threading.Thread(target=claimworthinesschecker.check, args=(TRANSLATED_TEXT, identifier))
+            thread.start()
         pass
     elif next_stage == 3:
-        # evidence retrival
-        if CLAIM_CHECK_WORTHINESS_RESULT == None:
+        #evidence retrival
+        if CLAIM_CHECK_WORTHINESS_RESULT==None:
             logging.error("error : the claims worthiness response is null")
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY",
@@ -104,7 +109,7 @@ def goNextLevel(identifier):
             thread.start()
             # stance detection
         except Exception as e:
-            logging.error(e)
+            logging.error(str(e))
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
     elif next_stage == 5:

@@ -9,7 +9,6 @@ import settings
 
 app = Flask(__name__)
 
-
 @app.route('/test')
 @app.route('/default')
 def test():
@@ -57,9 +56,11 @@ def do_mapping(result):
     explanation =""
     checkTimestamp = tempjson[15]
     provenance = "{ \"check_timestamp\":\""+str(checkTimestamp)+"\", \"knowledge_date\":\"2023-05-30\",\"model_date\":\"2023-05-30\"}"
-    mapped_result = "{\"id\":\""+id+"\",\"status\":\""+status+"\",\"text\":\""+text+"\",\"lang\":\""+lang+"\",\"veracity_score\":"+str(veracity_score)+",\"explanation\":\""+explanation+"\",\"provenance\":"+provenance+"}"
+    mapped_result = "{\"id\":\""+str(id)+"\",\"status\":\""+str(status)+"\",\"text\":\""+str(text)+"\",\"lang\":\""+str(lang)+"\",\"veracity_label\":\"supported\",\"veracity_score\":"+str(veracity_score)+",\"explanation\":\""+str(explanation)+"\",\"provenance\":"+str(provenance)+"}"
     return mapped_result
-
+#supported
+#refuted
+#not enough information
 
 
 @app.route('/status', methods=['GET', 'POST'])
@@ -86,6 +87,16 @@ def raw_status():
         result = "{\"error\":\"nothing found with this id : " + id + "\"}"
         return Response(result, status=400, mimetype='application/json')
     return Response(result, status=200, mimetype='application/json')
+
+@app.route('/textsearch', methods=['GET', 'POST'])
+def textsearch():
+    args = request.args
+    text = args.get('text')
+    result = databasemanager.select_basedon_text(text)
+    if result is None or result == "null":
+        result = "{\"error\":\"nothing found with this text : " + text + "\"}"
+        return Response(result, status=400, mimetype='application/json')
+    return Response("{\"results\": "+result+"}", status=200, mimetype='application/json')
 
 
 if __name__ == '__main__':

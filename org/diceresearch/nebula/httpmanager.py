@@ -1,3 +1,5 @@
+import logging
+import settings
 import requests
 
 
@@ -12,14 +14,14 @@ def send_post(url, data, headers):
     response = requests.post(url, headers=headers, data=data)
     # Check the response status code
     if response.status_code == 200:
-        print("POST request was successful!")
-        print(str(response))
+        logging.info("POST request was successful!")
+        logging.info(str(response))
         # if(response.headers.get('content-type') == 'application/json'):
         #    return response.json()
         # else :
         return response.text
     else:
-        print("POST request failed with status code:", response.status_code)
+        logging.error("POST request failed with status code: " + str(response.status_code))
         return response.json()
 
 
@@ -28,10 +30,10 @@ def send_post_json(url, json, headers):
     response = requests.post(url, json=json, headers=headers)
     # Check the response status code
     if response.status_code == 200:
-        print("POST request was successful!")
+        logging.info("POST request was successful!")
         return response.text
     else:
-        print("POST request failed with status code:", response.status_code)
+        logging.error("POST request failed with status code:" + response.status_code)
         return response.json()
 
 
@@ -40,12 +42,12 @@ def send_get(url, data):
     response = requests.get(url + data)
     # Check the response status code
     if response.status_code == 200:
-        print("Get request was successful!")
-        print(str(response))
+        logging.info("Get request was successful!")
+        logging.info(str(response))
         if (response.headers.get('content-type') == 'application/json'):
             return response.json()
         else:
             return response.text
     else:
-        print("POST request failed with status code:", response.status_code)
+        logging.error("POST request failed with status code: "+ response.status_code)
         return response.json()
