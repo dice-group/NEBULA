@@ -29,7 +29,7 @@ def parse_args():
     parser.add_argument('--save', default='resources/model.pt', help='Path where to save the trained model')
     parser.add_argument('--top-k', default=10, type=int, help='Top k evidence')
     parser.add_argument('--dropout', default=0.5, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=1, type=int, help='Number of epochs')
+    parser.add_argument('--epochs', default=100, type=int, help='Number of epochs')
     parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
@@ -60,7 +60,7 @@ def main():
     logging.info(model)
 
     # train
-    train_losses, _ = model.train_model(loss_function=torch.nn.L1Loss,
+    train_losses, _ = model.train_model(loss_function=torch.nn.SmoothL1Loss,
                                         optimizer=torch.optim.Adam,
                                         training_loader=train_loader,
                                         epochs=args.epochs, lr=args.learning_rate)

@@ -1,10 +1,10 @@
+import logging
 import threading
 
 import databasemanager
 import httpmanager
 import orchestrator
 import settings
-
 
 def check(text, identifier):
     try:
@@ -19,8 +19,7 @@ def check(text, identifier):
 
         # Send the POST request to the API and store the api response
         api_response = httpmanager.send_post_json(api_endpoint, payload, request_headers)
-        # Print out the JSON payload the API sent back
-        print(str(api_response))
+        logging.info(str(api_response))
 
         # save in the database
         databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_name,
