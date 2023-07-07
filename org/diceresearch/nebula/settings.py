@@ -28,3 +28,5 @@ elasticsearch_api_endpoint = "http://nebulavm.cs.uni-paderborn.de:9200"
 stancedetection_api = "http://localhost:8001/check/"
 
 run_evidence_retrival_bulk_or_single = "single"
+
+trained_model = "./resources/model.pt"
