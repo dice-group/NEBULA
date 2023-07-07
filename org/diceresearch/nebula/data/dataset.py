@@ -1,6 +1,33 @@
+from collections import Counter
+
 import numpy as np
+import torch
+from imblearn.over_sampling import RandomOverSampler
 from torch.utils.data import Dataset
-from torch.utils.data.dataset import T_co
+
+label_dict = {
+    "SUPPORTS": 2,
+    "NOT ENOUGH INFO": 1,
+    "REFUTES": 0
+}
+
+class_counts = Counter()
+
+
+class MultiOverSamplingSampler:
+    def __init__(self, dataset):
+        self.dataset = dataset
+        self.over_sampler = RandomOverSampler(sampling_strategy='not majority')
+
+    def __iter__(self):
+        # Perform oversampling on the underrepresented classes
+        over_sampled, _ = self.over_sampler.fit_resample(
+            X=self.dataset.stance_scores, y=self.dataset.label
+        )
+        return iter(over_sampled)
+
+    def __len__(self):
+        return len(self.dataset)
 
 
 class StanceDataset(Dataset):
@@ -35,16 +62,13 @@ class StanceDataset(Dataset):
             self.stance_scores = list()
             self.label = list()
 
-            label_dict = {
-                "SUPPORTS": 1.0,
-                "NOT ENOUGH INFO": 0.5,
-                "REFUTES": 0.0
-
-            }
-
             for item in jsonl:
                 self.claim_id.append(item['id'])
-                self.label.append(label_dict[item['label']])
+                # self.label.append(label_dict[item['label']])
+                one_hot_encoded = torch.zeros(3, dtype=torch.float32)
+                one_hot_encoded[label_dict[item['label']]] = 1
+                class_counts.update([str(one_hot_encoded)])
+                self.label.append(one_hot_encoded)
                 scores = item['scores']
                 l_scores = list()
                 # TODO add limit of k scores, zero pad the ones less than k
@@ -61,14 +85,13 @@ class StanceDataset(Dataset):
                   'labels': np.float32(self.label[index])}
         return sample
 
-
-class WiseDataset(Dataset):
-    """
-
-    """
-
-    def __init__(self):
-        pass
-
-    def __getitem__(self, index) -> T_co:
-        pass
+# class WiseDataset(Dataset):
+#     """
+#
+#     """
+#
+#     def __init__(self):
+#         pass
+#
+#     def __getitem__(self, index) -> T_co:
+#         pass
