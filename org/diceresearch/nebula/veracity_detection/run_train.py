@@ -67,7 +67,8 @@ def main():
 
     # save trained model to file
     logging.info('Saved model to {0}'.format(args.save))
-    torch.save(model.state_dict(), args.save)
+    # torch.save(model.state_dict(), args.save)
+    torch.save(model, args.save)
 
     # read and predict
     logging.info('Reading test file from {0}'.format(args.test_file))
