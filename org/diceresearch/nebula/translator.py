@@ -16,7 +16,7 @@ def send_translation_request(textToTranslate, identifier):
 
         result = httpmanager.send_post(settings.translatorEndpoint, data, headers)
 
-        result = result.replace("\""," ")
+        result = result.replace("\"","")
 
         # save the result in database
         databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, result, identifier)
@@ -28,4 +28,3 @@ def send_translation_request(textToTranslate, identifier):
         logging.error(str(e))
         databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
         databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
-

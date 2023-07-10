@@ -1,13 +1,10 @@
 import argparse
-import json
 import logging
-from itertools import product
 from logging.config import fileConfig
 
 import numpy as np
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
-from tqdm import tqdm
 
 from org.diceresearch.nebula.data.dataset import StanceDataset
 from org.diceresearch.nebula.utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes
