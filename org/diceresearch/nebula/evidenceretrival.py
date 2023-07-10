@@ -36,63 +36,21 @@ def do_query(text):
         return None
 
 
-def generate_result_tosave(all_results):
-    result = "{\"evidences\":["
-    counter = 0
-    for r in all_results:
-        result += r
-        counter = counter + 1
-        if counter < len(all_results):
-            result += ","
-    result += "]}"
-    return result
-
-
-def generate_one_block_of_result(resultOfQueries, originatlTextForQuery):
-    return "{\"result\":" + str(resultOfQueries) + ",\"query\":\"" + str(originatlTextForQuery) + "\"}"
-
-
-"""def retrive(text,identifier):
-    result = doQuery(text)
-    if result is None:
-        print("error in retrieving the evidences")
-    else:
-        # save the result in database
-        tosave = generateResultTosave(result, text)
-        databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrival_column_name, tosave, identifier)
-
-#        if(result["hits"]["hits"] == []):
-#            print("elastic search has no results")
-
-        # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
-
-#        {'version': '2',
-#         'sentences': 'Now from January 1st: EU standard chip EPS replaces personal identity card Saturday, 20 Jul 2019 Facebook What has been standard for dogs and cats for years worldwide, will be gradually introduced from January 1st 2021 also for citizens of the European Union. This idea is not completely new, but with the project in the European Union now for the first time in a large style introduced in a community of states. 2022',
-#         'results': [{
-#                         'text': 'Now from January 1st: EU standard chip EPS replaces personal identity card Saturday, 20 Jul 2019 Facebook What has been standard for dogs and cats for years worldwide, will be gradually introduced from January 1st 2021 also for citizens of the European Union.',
-#                         'index': 0, 'score': 0.5979533384}, {
-#                         'text': 'This idea is not completely new, but with the project in the European Union now for the first time in a large style introduced in a community of states.',
-#                         'index': 1, 'score': 0.7661571161}, {'text': '2022', 'index': 2, 'score': 0.37916248}]}
-
-"""
-
-
 def retrieve(input, identifier):
     try:
-        # er_result = EvidenceRetrievalResult()
-        allResults = []
+        # collect results
+        er_result = EvidenceRetrievalResult()
         for claim in input["results"]:
             text = claim["text"]
             result = do_query(text)
-            # er_result.add(QueryResult(result, text))
-            allResults.append(generate_one_block_of_result(result, text))
-        tosave = generate_result_tosave(allResults)
-        # tosave = er_result.get_json()
+            er_result.add(QueryResult(result, text))
+        tosave = er_result.get_json()
+
+        # update database
         databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrival_column_name, tosave,
                                     identifier)
         databasemanager.increase_the_stage(settings.results_table_name, identifier)
+
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()

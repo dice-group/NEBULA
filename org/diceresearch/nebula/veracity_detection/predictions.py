@@ -1,9 +1,11 @@
+import threading
+
 import pandas as pd
 import torch
-from org.diceresearch.nebula import settings
+from org.diceresearch.nebula import settings, orchestrator
 
 
-def predict(json):
+def predict(json, identifier):
     """
 
     :param json:
@@ -15,6 +17,13 @@ def predict(json):
     model = torch.load(settings.trained_model)
 
     # parse the stance scores only and feed to model
-    df = pd.DataFrame(json)
+    df = pd.json_normalize(json['stances'])
     scores = torch.tensor(df.stance_score, dtype=torch.float32)
-    return model.test_model(scores)
+
+    predictions = model.test_model(scores.unsqueeze(0))
+
+    # go next level
+    thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
+    thread.start()
+
+    return predictions
