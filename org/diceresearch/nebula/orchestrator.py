@@ -15,7 +15,7 @@ from org.diceresearch.nebula.veracity_detection import predictions
 
 
 def goNextLevel(identifier):
-    logging.info("orch:" + identifier)
+    logging.info("Orch:" + identifier)
     current = databasemanager.getOne(settings.results_table_name, identifier)
     STAGE_NUMBER = current[1]
     INPUT_TEXT = current[2]
@@ -30,8 +30,8 @@ def goNextLevel(identifier):
     logging.info("Current stage is : " + str(current_stage))
     next_stage = current_stage + 1
     if next_stage == 1:
-        databasemanager.update_step(settings.results_table_name, "STATUS", "ongoing", identifier)
-        databasemanager.update_step(settings.results_table_name, "CHECK_TIMESTAMP", datetime.now().isoformat('#'),
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.ongoing, identifier)
+        databasemanager.update_step(settings.results_table_name, settings.timestamp, datetime.now().isoformat('#'),
                                     identifier)
         # translate
         # language
@@ -48,7 +48,7 @@ def goNextLevel(identifier):
                                         INPUT_TEXT, identifier)
             databasemanager.increase_the_stage(settings.results_table_name, identifier)
             goNextLevel(identifier)
-        pass
+
     elif next_stage == 2:
         #claim
         if settings.module_claimworthiness == "dummy":
@@ -57,14 +57,14 @@ def goNextLevel(identifier):
         else:
             thread = threading.Thread(target=claimworthinesschecker.check, args=(TRANSLATED_TEXT, identifier))
             thread.start()
-        pass
+
     elif next_stage == 3:
         #evidence retrival
         if CLAIM_CHECK_WORTHINESS_RESULT==None:
-            logging.error("error : the claims worthiness response is null")
-            databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-            databasemanager.update_step(settings.results_table_name, "ERROR_BODY",
-                                        "the claims worthiness response is null", identifier)
+            logging.error("The claims worthiness response is null")
+            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+            databasemanager.update_step(settings.results_table_name, settings.error_msg,
+                                        "The claims worthiness response is null", identifier)
         try:
             # textToConvert = str(CLAIM_CHECK_WORTHINESS_RESULT)
             jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
@@ -92,9 +92,9 @@ def goNextLevel(identifier):
             thread.start()
         except JSONDecodeError as exp:
             logging.exception(exp)
-            databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-            databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(exp.msg), identifier)
-        pass
+            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+            databasemanager.update_step(settings.results_table_name, settings.error_msg, str(exp.msg), identifier)
+
     elif next_stage == 4:
         try:
             logging.info("Stance detection")
@@ -112,23 +112,23 @@ def goNextLevel(identifier):
             # stance detection
         except Exception as e:
             logging.exception("Error {0} with json {1}".format(e, EVIDENCE_RETRIVAL_RESULT))
-            databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-            databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
+            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+            databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+
     elif next_stage == 5:
         logging.info('Query the trained model')
-        if STANCE_DETECTION_RESULT == None:
-            logging.error('There\'s no stance scores to process')
-        else:
-            try:
-                tempjson = json.loads(STANCE_DETECTION_RESULT)
-                thread = threading.Thread(target=predictions.predict,
+        try:
+            tempjson = json.loads(STANCE_DETECTION_RESULT)
+            thread = threading.Thread(target=predictions.predict,
                                           args=(tempjson, identifier))
-                thread.start()
-            except Exception as e:
-                logging.exception(e)
+            thread.start()
+        except Exception as e:
+            logging.exception(e)
+            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+            databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+
     elif next_stage == 6:
-        databasemanager.update_step(settings.results_table_name, "STATUS", "done", identifier)
-        pass
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
     elif next_stage == 7:
         pass
     elif next_stage == 8:

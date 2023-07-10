@@ -17,6 +17,18 @@ results_evidenceretrival_column_name = "EVIDENCE_RETRIVAL_RESULT"
 results_evidenceretrival_column_status = "EVIDENCE_RETRIVAL_RESULT_STATUS"
 results_stancedetection_column_name = "STANCE_DETECTION_RESULT"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
+results_wiseone_column_name = "WISE_ONE_RESULT"
+results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
+
+completed = "COMPLETED"
+done = "DONE"
+ongoing = "ONGOING"
+failed = "FAILED"
+error = "ERROR"
+error_msg = "ERROR_BODY"
+
+timestamp = "CHECK_TIMESTAMP"
+status = "STATUS"
 
 translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 

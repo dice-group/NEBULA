@@ -10,6 +10,10 @@ from tqdm import tqdm
 """
 
 
+def trim(text):
+    return text.replace("\"", "").replace("\'", "")
+
+
 def get_optimal_thresholds(thresholds_range, classes, scores, true_labels):
     """
     Gets optimal thresholds to convert continuous scores into 3 discrete classes based on the macro F1 score
