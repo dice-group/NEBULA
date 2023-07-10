@@ -25,9 +25,9 @@ def goNextLevel(identifier):
     EVIDENCE_RETRIVAL_RESULT = current[8]
     STANCE_DETECTION_RESULT = current[10]
     if current == None:
-        logging.info("could not find this row in database " + identifier)
+        logging.info("Could not find this row in database " + identifier)
     current_stage = int(STAGE_NUMBER)
-    logging.info("curront stage is : " + str(current_stage))
+    logging.info("Current stage is : " + str(current_stage))
     next_stage = current_stage + 1
     if next_stage == 1:
         databasemanager.update_step(settings.results_table_name, "STATUS", "ongoing", identifier)
@@ -37,12 +37,12 @@ def goNextLevel(identifier):
         # language
         if INPUT_LANG != "en":
             # start the translation step
-            logging.info("translation step")
+            logging.info("Translation step")
             thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
             thread.start()
         else:
             # update the stage
-            logging.info("skip the translation")
+            logging.info("Skip the translation")
             # databasemanager.increaseTheStage(settings.results_table_name, identifier)
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
                                         INPUT_TEXT, identifier)
@@ -91,13 +91,13 @@ def goNextLevel(identifier):
                                       args=(jsonCheckdClaimsForWorthiness, identifier))
             thread.start()
         except JSONDecodeError as exp:
-            logging.error(exp)
+            logging.exception(exp)
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(exp.msg), identifier)
         pass
     elif next_stage == 4:
         try:
-            logging.info("stance detection")
+            logging.info("Stance detection")
             tempjson = json.loads(EVIDENCE_RETRIVAL_RESULT)
             temp_evidences = tempjson["evidences"]
             logging.info(EVIDENCE_RETRIVAL_RESULT)
@@ -111,7 +111,7 @@ def goNextLevel(identifier):
             thread.start()
             # stance detection
         except Exception as e:
-            logging.error("Error {0} with json {1}".format(e, EVIDENCE_RETRIVAL_RESULT))
+            logging.exception("Error {0} with json {1}".format(e, EVIDENCE_RETRIVAL_RESULT))
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
     elif next_stage == 5:
@@ -125,10 +125,9 @@ def goNextLevel(identifier):
                                           args=(tempjson, identifier))
                 thread.start()
             except Exception as e:
-                logging.error(e)
-                databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-                databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
+                logging.exception(e)
     elif next_stage == 6:
+        databasemanager.update_step(settings.results_table_name, "STATUS", "done", identifier)
         pass
     elif next_stage == 7:
         pass

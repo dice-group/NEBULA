@@ -29,5 +29,6 @@ def check(text, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
+        logging.exception(e)
         databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
         databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
