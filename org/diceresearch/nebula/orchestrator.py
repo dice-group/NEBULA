@@ -69,6 +69,7 @@ def goNextLevel(identifier):
             # textToConvert = str(CLAIM_CHECK_WORTHINESS_RESULT)
             jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
 
+
             #        {'version': '2',
             #         'sentences': 'Now from January 1st: EU standard chip EPS replaces personal identity card Saturday, 20 Jul 2019 Facebook What has been standard for dogs and cats for years worldwide, will be gradually introduced from January 1st 2021 also for citizens of the European Union. This idea is not completely new, but with the project in the European Union now for the first time in a large style introduced in a community of states. 2022',
             #         'results': [{
@@ -86,11 +87,11 @@ def goNextLevel(identifier):
             #                thread = threading.Thread(target=evidenceretrival.retrive, args=(jsonCheckdClaimsForWorthiness["results"][maxIndex]["text"], identifier))
             #                thread.start()
             #            else:
-            thread = threading.Thread(target=evidenceretrival.retrive,
+            thread = threading.Thread(target=evidenceretrival.retrieve,
                                       args=(jsonCheckdClaimsForWorthiness, identifier))
             thread.start()
         except JSONDecodeError as exp:
-            logging.error(exp.msg)
+            logging.error(exp)
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(exp.msg), identifier)
         pass
@@ -99,6 +100,7 @@ def goNextLevel(identifier):
             logging.info("stance detection")
             tempjson = json.loads(EVIDENCE_RETRIVAL_RESULT)
             temp_evidences = tempjson["evidences"]
+            logging.info(EVIDENCE_RETRIVAL_RESULT)
 
             # mainText = tempjson["result"]["hits"]["hits"][0]["_source"]["text"]
 
@@ -109,7 +111,7 @@ def goNextLevel(identifier):
             thread.start()
             # stance detection
         except Exception as e:
-            logging.error(str(e))
+            logging.error("Error {0} with json {1}".format(e, EVIDENCE_RETRIVAL_RESULT))
             databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
             databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
     elif next_stage == 5:

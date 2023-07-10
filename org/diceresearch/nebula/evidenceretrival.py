@@ -6,6 +6,8 @@ from elasticsearch import Elasticsearch
 import databasemanager
 import orchestrator
 import settings
+from org.diceresearch.nebula.data.results import EvidenceRetrievalResult, QueryResult
+
 
 def do_query(text):
     try:
@@ -30,7 +32,7 @@ def do_query(text):
 
         return json.dumps(response.raw)
     except Exception as ex:
-        logging.error(str(ex))
+        logging.exception(ex)
         return None
 
 
@@ -77,14 +79,17 @@ def generate_one_block_of_result(resultOfQueries, originatlTextForQuery):
 """
 
 
-def retrive(input, identifier):
+def retrieve(input, identifier):
     try:
+        # er_result = EvidenceRetrievalResult()
         allResults = []
         for claim in input["results"]:
             text = claim["text"]
             result = do_query(text)
+            # er_result.add(QueryResult(result, text))
             allResults.append(generate_one_block_of_result(result, text))
         tosave = generate_result_tosave(allResults)
+        # tosave = er_result.get_json()
         databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrival_column_name, tosave,
                                     identifier)
         databasemanager.increase_the_stage(settings.results_table_name, identifier)
@@ -92,5 +97,6 @@ def retrive(input, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
+        logging.exception(e)
         databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
         databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
