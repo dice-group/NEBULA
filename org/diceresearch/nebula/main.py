@@ -7,12 +7,15 @@ import json
 from datetime import datetime
 import settings
 
+from org.diceresearch.nebula.data.results import ResponseStatus, Status, Provenance
+from org.diceresearch.nebula.utils.util import trim
+
 app = Flask(__name__)
 
 @app.route('/test')
 @app.route('/default')
 def test():
-    return Response("{\"test\": \"ok\"}", status=200, mimetype='application/json')
+    return Response(ResponseStatus(status="OK").get_json(), status=200, mimetype='application/json')
 
 
 def start_pipeline(text, lang):
@@ -24,11 +27,6 @@ def start_pipeline(text, lang):
     return identifier
 
 
-def trim(text):
-    text = text.replace("\"","").replace("\'","");
-    return text;
-
-
 @app.route('/check', methods=['GET', 'POST'])
 def check():
     args = request.args
@@ -38,54 +36,51 @@ def check():
     if lang is None:
         lang = "nd"
     if text is None:
-        return Response("{\"error\": \"send the string as [text] argument in query string or body\"}", status=400,
+        return Response(ResponseStatus(status="Error", text="Send the string as [text] argument in query string or body").get_json(), status=400,
                         mimetype='application/json')
     text = trim(text)
     id = start_pipeline(text, lang)
 
-    return Response("{\"id\": \"" + id + "\"}", status=200, mimetype='application/json')
+    return Response(ResponseStatus(id=id).get_json(), status=200, mimetype='application/json')
 
 
 def do_mapping(result):
     tempjson = json.loads(result)
     id = tempjson[0]
-    status = tempjson[12]
     text = tempjson[2]
     lang = tempjson[3]
-    veracity_score = 0.5
-    explanation =""
-    checkTimestamp = tempjson[15]
-    provenance = "{ \"check_timestamp\":\""+str(checkTimestamp)+"\", \"knowledge_date\":\"2023-05-30\",\"model_date\":\"2023-05-30\"}"
-    mapped_result = "{\"id\":\""+str(id)+"\",\"status\":\""+str(status)+"\",\"text\":\""+str(text)+"\",\"lang\":\""+str(lang)+"\",\"veracity_label\":\"supported\",\"veracity_score\":"+str(veracity_score)+",\"explanation\":\""+str(explanation)+"\",\"provenance\":"+str(provenance)+"}"
-    return mapped_result
-#supported
-#refuted
-#not enough information
+    veracity_score = float(tempjson[12])
+    veracity_label = True if veracity_score > 0.5 else False
+    explanation = ""
+    status = tempjson[14]
+    checkTimestamp = tempjson[17]
+    provenance = Provenance(checkTimestamp, "2023-05-30", "2023-05-30")
+    result = Status(id, status, text, lang, veracity_label, veracity_score, explanation, provenance)
+    return result.get_json(is_pretty=True)
 
 
 @app.route('/status', methods=['GET', 'POST'])
 def status():
+    """
+    Outputs selected fields
+    :return:
+    """
     args = request.args
     id = args.get('id')
-    if id is None:
-        return Response("{\"error\": \"id is required\"}", status=400, mimetype='application/json')
-    result = databasemanager.select_basedon_id(id)
-    if result is None or result == "null":
-        result = "{\"error\":\"nothing found with this id : " + id + "\"}"
-        return Response(result, status=400, mimetype='application/json')
+    result = get_result_from_id(id)
+    # clean up result
     mapped_result = do_mapping(result)
     return Response(mapped_result, status=200, mimetype='application/json')
 
 @app.route('/rawstatus', methods=['GET', 'POST'])
 def raw_status():
+    """
+    Outputs everything in the result
+    :return:
+    """
     args = request.args
     id = args.get('id')
-    if id is None:
-        return Response("{\"error\": \"id is required\"}", status=400, mimetype='application/json')
-    result = databasemanager.select_basedon_id(id)
-    if result is None or result == "null":
-        result = "{\"error\":\"nothing found with this id : " + id + "\"}"
-        return Response(result, status=400, mimetype='application/json')
+    result = get_result_from_id(id)
     return Response(result, status=200, mimetype='application/json')
 
 @app.route('/textsearch', methods=['GET', 'POST'])
@@ -98,6 +93,16 @@ def textsearch():
         return Response(result, status=400, mimetype='application/json')
     return Response("{\"results\": "+result+"}", status=200, mimetype='application/json')
 
+
+def get_result_from_id(id):
+    if id is None:
+        return Response(ResponseStatus(status="Error", text="ID is required").get_json(),
+                        status=400, mimetype='application/json')
+    result = databasemanager.select_basedon_id(id)
+    if result is None or result == "null":
+        return Response(ResponseStatus(status="Error", text="Nothing found with this id {}".format(id)).get_json(),
+                        status=400, mimetype='application/json')
+    return result
 
 if __name__ == '__main__':
     app.run()
