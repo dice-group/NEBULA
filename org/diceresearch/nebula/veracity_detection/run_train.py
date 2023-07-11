@@ -6,6 +6,7 @@ import numpy as np
 import torch
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
+from org.diceresearch.nebula import settings
 from org.diceresearch.nebula.data.dataset import StanceDataset
 from org.diceresearch.nebula.utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes
 from org.diceresearch.nebula.veracity_detection.model import MLP
@@ -35,7 +36,7 @@ def parse_args():
 
 
 def main():
-    fileConfig('./resources/logging_config.ini')
+    fileConfig(settings.logging_config)
     args = parse_args()
 
     # read data from file

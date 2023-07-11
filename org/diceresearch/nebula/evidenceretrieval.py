@@ -47,8 +47,10 @@ def retrieve(input, identifier):
         tosave = er_result.get_json()
 
         # update database
-        databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrival_column_name, tosave,
+        databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrieval_column_name, tosave,
                                     identifier)
+        databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrieval_column_status,
+                                   settings.completed, identifier)
         databasemanager.increase_the_stage(settings.results_table_name, identifier)
 
         # go next level
@@ -56,5 +58,5 @@ def retrieve(input, identifier):
         thread.start()
     except Exception as e:
         logging.exception(e)
-        databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-        databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
