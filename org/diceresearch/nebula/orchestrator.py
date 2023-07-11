@@ -7,7 +7,7 @@ from json import JSONDecodeError
 import claimworthinesschecker
 import claimworthinesscheckerdummy
 import databasemanager
-import evidenceretrival
+import evidenceretrieval
 import settings
 import stancedetection
 import translator
@@ -22,8 +22,9 @@ def goNextLevel(identifier):
     INPUT_LANG = current[3]
     TRANSLATED_TEXT = current[4]
     CLAIM_CHECK_WORTHINESS_RESULT = current[6]
-    EVIDENCE_RETRIVAL_RESULT = current[8]
+    EVIDENCE_RETRIEVAL_RESULT = current[8]
     STANCE_DETECTION_RESULT = current[10]
+
     if current == None:
         logging.info("Could not find this row in database " + identifier)
     current_stage = int(STAGE_NUMBER)
@@ -43,7 +44,6 @@ def goNextLevel(identifier):
         else:
             # update the stage
             logging.info("Skip the translation")
-            # databasemanager.increaseTheStage(settings.results_table_name, identifier)
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
                                         INPUT_TEXT, identifier)
             databasemanager.increase_the_stage(settings.results_table_name, identifier)
@@ -59,35 +59,16 @@ def goNextLevel(identifier):
             thread.start()
 
     elif next_stage == 3:
-        #evidence retrival
-        if CLAIM_CHECK_WORTHINESS_RESULT==None:
+        # evidence retrival
+        if CLAIM_CHECK_WORTHINESS_RESULT == None:
             logging.error("The claims worthiness response is null")
             databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
             databasemanager.update_step(settings.results_table_name, settings.error_msg,
                                         "The claims worthiness response is null", identifier)
         try:
-            # textToConvert = str(CLAIM_CHECK_WORTHINESS_RESULT)
             jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
 
-
-            #        {'version': '2',
-            #         'sentences': 'Now from January 1st: EU standard chip EPS replaces personal identity card Saturday, 20 Jul 2019 Facebook What has been standard for dogs and cats for years worldwide, will be gradually introduced from January 1st 2021 also for citizens of the European Union. This idea is not completely new, but with the project in the European Union now for the first time in a large style introduced in a community of states. 2022',
-            #         'results': [{
-            #                         'text': 'Now from January 1st: EU standard chip EPS replaces personal identity card Saturday, 20 Jul 2019 Facebook What has been standard for dogs and cats for years worldwide, will be gradually introduced from January 1st 2021 also for citizens of the European Union.',
-            #                         'index': 0, 'score': 0.5979533384}, {
-            #                         'text': 'This idea is not completely new, but with the project in the European Union now for the first time in a large style introduced in a community of states.',
-            #                         'index': 1, 'score': 0.7661571161}, {'text': '2022', 'index': 2, 'score': 0.37916248}]}
-            #            maxScore = 0;
-            #            maxIndex = 0
-            #            for rr in jsonCheckdClaimsForWorthiness["results"]:
-            #                    if (maxScore < rr['score']):
-            #                        maxScore = rr['score']
-            #                        maxIndex = rr['index']
-            #            if settings.run_evidence_retrival_bulk_or_single == "single":
-            #                thread = threading.Thread(target=evidenceretrival.retrive, args=(jsonCheckdClaimsForWorthiness["results"][maxIndex]["text"], identifier))
-            #                thread.start()
-            #            else:
-            thread = threading.Thread(target=evidenceretrival.retrieve,
+            thread = threading.Thread(target=evidenceretrieval.retrieve,
                                       args=(jsonCheckdClaimsForWorthiness, identifier))
             thread.start()
         except JSONDecodeError as exp:
@@ -98,30 +79,39 @@ def goNextLevel(identifier):
     elif next_stage == 4:
         try:
             logging.info("Stance detection")
-            tempjson = json.loads(EVIDENCE_RETRIVAL_RESULT)
-            temp_evidences = tempjson["evidences"]
-            logging.info(EVIDENCE_RETRIVAL_RESULT)
 
-            # mainText = tempjson["result"]["hits"]["hits"][0]["_source"]["text"]
+            # no evidence is found
+            if EVIDENCE_RETRIEVAL_RESULT is None:
+                logging.error("Found no evidence")
+                databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+                databasemanager.update_step(settings.results_table_name, settings.error_msg,
+                                            "Found no evidence", identifier)
+            else:
+                tempjson = json.loads(EVIDENCE_RETRIEVAL_RESULT)
+                temp_evidences = tempjson["evidences"]
+                logging.info(EVIDENCE_RETRIEVAL_RESULT)
 
-            # tempjson = json.loads(EVIDENCE_RETRIVAL_RESULT)
-            # claim = tempjson["query"]
-            thread = threading.Thread(target=stancedetection.calculate,
-                                      args=(temp_evidences, identifier))
-            thread.start()
-            # stance detection
+                thread = threading.Thread(target=stancedetection.calculate,
+                                          args=(temp_evidences, identifier))
+                thread.start()
         except Exception as e:
-            logging.exception("Error {0} with json {1}".format(e, EVIDENCE_RETRIVAL_RESULT))
+            logging.exception("Error {0} with json {1}".format(e, EVIDENCE_RETRIEVAL_RESULT))
             databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
             databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
 
     elif next_stage == 5:
         logging.info('Query the trained model')
         try:
-            tempjson = json.loads(STANCE_DETECTION_RESULT)
-            thread = threading.Thread(target=predictions.predict,
-                                          args=(tempjson, identifier))
-            thread.start()
+            if STANCE_DETECTION_RESULT is None:
+                logging.error("There are no stances scores")
+                databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+                databasemanager.update_step(settings.results_table_name, settings.error_msg,
+                                            "There are no stances scores", identifier)
+            else:
+                tempjson = json.loads(STANCE_DETECTION_RESULT)
+                thread = threading.Thread(target=predictions.predict,
+                                              args=(tempjson, identifier))
+                thread.start()
         except Exception as e:
             logging.exception(e)
             databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)

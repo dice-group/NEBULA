@@ -1,16 +1,18 @@
-from flask import Flask, request, Response
+import json
+import threading
 import uuid
+from logging.config import fileConfig
+
 import databasemanager
 import orchestrator
-import threading
-import json
-from datetime import datetime
-import settings
+from flask import Flask, request, Response
 
+from org.diceresearch.nebula import settings
 from org.diceresearch.nebula.data.results import ResponseStatus, Status, Provenance
 from org.diceresearch.nebula.utils.util import trim
 
 app = Flask(__name__)
+fileConfig(settings.logging_config)
 
 @app.route('/test')
 @app.route('/default')
@@ -49,8 +51,9 @@ def do_mapping(result):
     id = tempjson[0]
     text = tempjson[2]
     lang = tempjson[3]
-    veracity_score = float(tempjson[12])
-    veracity_label = True if veracity_score > 0.5 else False
+    ver_score_str = tempjson[12]
+    veracity_score = float(ver_score_str) if ver_score_str is not None else None
+    veracity_label = True if veracity_score is not None and veracity_score > 0.5 else False
     explanation = ""
     status = tempjson[14]
     checkTimestamp = tempjson[17]
@@ -81,6 +84,7 @@ def raw_status():
     args = request.args
     id = args.get('id')
     result = get_result_from_id(id)
+    result = get_json_with_db_columns(result)
     return Response(result, status=200, mimetype='application/json')
 
 @app.route('/textsearch', methods=['GET', 'POST'])
@@ -103,6 +107,22 @@ def get_result_from_id(id):
         return Response(ResponseStatus(status="Error", text="Nothing found with this id {}".format(id)).get_json(),
                         status=400, mimetype='application/json')
     return result
+
+def get_json_with_db_columns(input):
+    """
+    FIXME just add a select query to databasemanager to get the results like we want
+    this doesn't address the nested json strings
+    :param result:
+    :return:
+    """
+    result = json.loads(input)
+    return ResponseStatus(id=result[0], stage_number=result[1], input_text=result[2], input_lang=result[3],
+                              translation=result[4], translation_status=result[5], claim_check=result[6],
+                              claim_check_status=result[7], evidence_retrieval=result[8],
+                              evidence_retrieval_status=result[9], stance_detection=result[10],
+                              stance_detection_status=result[11], wiseone=result[12], wiseone_status=result[13],
+                              status=result[14], version=result[15], error_body=result[16],
+                              check_timestamp=result[17]).get_json(is_pretty=True)
 
 if __name__ == '__main__':
     app.run()

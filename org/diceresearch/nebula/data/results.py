@@ -1,9 +1,14 @@
 import json
 
+"""
+    This file contains all the result formats the service outputs.
+"""
+
 
 class Result(object):
-    def __init__(self):
-        pass
+    """
+        JSON serializable result
+    """
 
     def get_json(self, is_pretty=False):
         if is_pretty:
@@ -14,7 +19,7 @@ class Result(object):
 
 class ClaimCheckResult(Result):
     """
-
+        Claim check result format
     """
 
     def __init__(self, version: str, text: str, sentences: list):
@@ -25,6 +30,9 @@ class ClaimCheckResult(Result):
 
 
 class Sentence(object):
+    """
+        Sentence with corresponding index in the overall text
+    """
     def __init__(self, text: str, index: int, score: float):
         self.text = text
         self.index = index
@@ -32,14 +40,19 @@ class Sentence(object):
 
 
 class QueryResult(object):
+    """
+        Query result format
+    """
     def __init__(self, result: str, query: str):
         self.result = result
         self.query = query
 
 
 class EvidenceRetrievalResult(Result):
+    """
+        Evidence retrieval result format
+    """
     def __init__(self):
-        super().__init__()
         self.evidences = list()
 
     def add(self, query_result: QueryResult):
@@ -47,6 +60,9 @@ class EvidenceRetrievalResult(Result):
 
 
 class Stance(object):
+    """
+        Single stance result format
+    """
     def __init__(self, claim: str, text: str, url: str, elastic_score: float, stance_score: float):
         self.claim = claim
         self.text = text
@@ -56,8 +72,10 @@ class Stance(object):
 
 
 class StanceDetectionResult(Result):
+    """
+        Stance detection result format
+    """
     def __init__(self):
-        super().__init__()
         self.stances = list()
 
     def add_stance(self, stance: Stance):
@@ -69,7 +87,7 @@ class StanceDetectionResult(Result):
 
 class Provenance(object):
     """
-
+        Provenance information
     """
     def __init__(self, check_timestamp, knowledge_date, model_date):
         self.check_timestamp = check_timestamp
@@ -79,21 +97,21 @@ class Provenance(object):
 
 class ResponseStatus(Result):
     """
-
+        Dynamic status response. It expects only keyword arguments.
+        ResponseStatus(status="Error") will produce a ResponseStatus object with an attribute status with
+        the value "error", which in turn would produce a JSON of the form: {"status": "Error"}
     """
     def __init__(self, **kwargs):
-        super().__init__()
         for key, value in kwargs.items():
             self.__dict__[key] = value
 
 
 class Status(Result):
     """
-
+        Response status for the /status query
     """
 
     def __init__(self, id, status, text, lang, veracity_label, veracity_score, explanation, provenance: Provenance):
-        super().__init__()
         self.id = id
         self.status = status
         self.lang = lang

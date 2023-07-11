@@ -105,6 +105,8 @@ def calculate(evidences, identifier):
     # update database
     databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,
                                 identifier)
+    databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_status,
+                                settings.completed, identifier)
     databasemanager.increase_the_stage(settings.results_table_name, identifier)
 
     # go next level
