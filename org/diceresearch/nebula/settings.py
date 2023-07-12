@@ -46,5 +46,12 @@ stancedetection_api = "http://localhost:8001/check/"
 run_evidence_retrival_bulk_or_single = "single"
 
 trained_model = "./resources/model.pt"
-model_timestamp = "10/07/2023"
-knowledge_timestamp = "31/05/2023"
+# WISE model last trained date
+model_timestamp = "2023-07-12"
+# Reference corpus last modified date
+knowledge_timestamp = "2023-05-31"
+
+# Thresholds to be used in case of regression model
+low_threshold= 0.66
+high_threshold= 0.69
+class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']

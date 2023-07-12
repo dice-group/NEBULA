@@ -9,7 +9,7 @@ from flask import Flask, request, Response
 
 from org.diceresearch.nebula import settings
 from org.diceresearch.nebula.data.results import ResponseStatus, Status, Provenance
-from org.diceresearch.nebula.utils.util import trim
+from org.diceresearch.nebula.utils.util import trim, translate_to_classes
 
 app = Flask(__name__)
 fileConfig(settings.logging_config)
@@ -52,12 +52,16 @@ def do_mapping(result):
     text = tempjson[2]
     lang = tempjson[3]
     ver_score_str = tempjson[12]
+    # get veracity score if available
     veracity_score = float(ver_score_str) if ver_score_str is not None else None
-    veracity_label = True if veracity_score is not None and veracity_score > 0.5 else False
+    # translate score to classes
+    # needs to be changed if we already have the classes and not the score
+    veracity_label = translate_to_classes(veracity_score, settings.low_threshold, settings.high_threshold,
+                                          settings.class_labels) if veracity_score is not None else None
     explanation = ""
     status = tempjson[14]
-    checkTimestamp = tempjson[17]
-    provenance = Provenance(checkTimestamp, "2023-05-30", "2023-05-30")
+    check_timestamp = tempjson[17]
+    provenance = Provenance(check_timestamp, settings.knowledge_timestamp, settings.model_timestamp)
     result = Status(id, status, text, lang, veracity_label, veracity_score, explanation, provenance)
     return result.get_json(is_pretty=True)
 
@@ -93,9 +97,9 @@ def textsearch():
     text = args.get('text')
     result = databasemanager.select_basedon_text(text)
     if result is None or result == "null":
-        result = "{\"error\":\"nothing found with this text : " + text + "\"}"
-        return Response(result, status=400, mimetype='application/json')
-    return Response("{\"results\": "+result+"}", status=200, mimetype='application/json')
+        return Response(ResponseStatus(status="Error", text="Nothing found with this text {}".format(text)).get_json(),
+                    status=400, mimetype='application/json')
+    return Response(ResponseStatus(results=result).get_json(is_pretty=True), status=200, mimetype='application/json')
 
 
 def get_result_from_id(id):
@@ -107,6 +111,7 @@ def get_result_from_id(id):
         return Response(ResponseStatus(status="Error", text="Nothing found with this id {}".format(id)).get_json(),
                         status=400, mimetype='application/json')
     return result
+
 
 def get_json_with_db_columns(input):
     """
@@ -123,6 +128,7 @@ def get_json_with_db_columns(input):
                               stance_detection_status=result[11], wiseone=result[12], wiseone_status=result[13],
                               status=result[14], version=result[15], error_body=result[16],
                               check_timestamp=result[17]).get_json(is_pretty=True)
+
 
 if __name__ == '__main__':
     app.run()
