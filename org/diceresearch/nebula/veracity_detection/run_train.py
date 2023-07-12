@@ -27,7 +27,7 @@ def parse_args():
     parser.add_argument('--save', default='resources/model.pt', help='Path where to save the trained model')
     parser.add_argument('--top-k', default=10, type=int, help='Top k evidence')
     parser.add_argument('--dropout', default=0.5, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=100, type=int, help='Number of epochs')
+    parser.add_argument('--epochs', default=200, type=int, help='Number of epochs')
     parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
@@ -85,7 +85,7 @@ def main():
     true_labels = [translate(label) for label in true_labels]
 
     # Adjust the range based on the output activation function
-    best_thresholds = get_optimal_thresholds(thresholds_range=np.arange(0.1, 1.0, 0.1),
+    best_thresholds = get_optimal_thresholds(thresholds_range=np.arange(0.1, 1.0, 0.01),
                                              classes=class_labels, scores=predicted_scores, true_labels=true_labels)
 
     # Print the best thresholds and F1 score

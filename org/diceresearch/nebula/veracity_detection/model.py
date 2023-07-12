@@ -112,7 +112,7 @@ class MLP(torch.nn.Sequential):
                     inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
                     optimizer.zero_grad()  # set gradients to 0
                     outputs = self(inputs) #.reshape(-1)  # predict labels
-                    loss = loss_function(outputs, labels)  # compute loss between predictions and actual
+                    loss = loss_function(outputs, labels.unsqueeze(1))  # compute loss between predictions and actual
                     loss.backward()  # backward pass
                     optimizer.step()  # optimize
 
