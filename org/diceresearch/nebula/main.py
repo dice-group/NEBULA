@@ -131,4 +131,4 @@ def get_json_with_db_columns(input):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0',port=8080)
