@@ -45,9 +45,9 @@ stancedetection_api = "http://localhost:8001/check/"
 
 run_evidence_retrival_bulk_or_single = "single"
 
-trained_model = "./resources/model.pt"
+trained_model = "./resources/model_130723.pt"
 # WISE model last trained date
-model_timestamp = "2023-07-12"
+model_timestamp = "2023-07-13"
 # Reference corpus last modified date
 knowledge_timestamp = "2023-05-31"
 

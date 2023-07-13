@@ -10,6 +10,7 @@ from flask import Flask, request, Response
 import settings
 from data.results import ResponseStatus, Status, Provenance
 from utils.util import trim, translate_to_classes
+from veracity_detection import predictions
 
 app = Flask(__name__)
 fileConfig(settings.logging_config)
@@ -53,7 +54,7 @@ def do_mapping(result):
     lang = tempjson[3]
     ver_score_str = tempjson[12]
     # get veracity score if available
-    veracity_score = float(ver_score_str) if ver_score_str is not None else None
+    veracity_score = predictions.aggregate(ver_score_str, 'mean') if ver_score_str is not None else None
     # translate score to classes
     # needs to be changed if we already have the classes and not the score
     veracity_label = translate_to_classes(veracity_score, settings.low_threshold, settings.high_threshold,
