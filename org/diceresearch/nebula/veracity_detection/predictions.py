@@ -3,7 +3,7 @@ import threading
 import pandas as pd
 import torch
 
-from nebula import settings, orchestrator, databasemanager
+import settings, orchestrator, databasemanager
 
 
 def predict(json, identifier):
