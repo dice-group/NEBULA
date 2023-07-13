@@ -6,7 +6,7 @@ from elasticsearch import Elasticsearch
 import databasemanager
 import orchestrator
 import settings
-from org.diceresearch.nebula.data.results import EvidenceRetrievalResult, QueryResult
+from data.results import EvidenceRetrievalResult, QueryResult
 
 
 def do_query(text):

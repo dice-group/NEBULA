@@ -7,7 +7,7 @@ import orchestrator
 import settings
 import nltk
 
-from org.diceresearch.nebula.data.results import StanceDetectionResult, Stance
+from data.results import StanceDetectionResult, Stance
 
 nltk.download('punkt')
 nltk.download('stopwords')

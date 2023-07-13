@@ -7,9 +7,9 @@ import databasemanager
 import orchestrator
 from flask import Flask, request, Response
 
-from org.diceresearch.nebula import settings
-from org.diceresearch.nebula.data.results import ResponseStatus, Status, Provenance
-from org.diceresearch.nebula.utils.util import trim, translate_to_classes
+import settings
+from data.results import ResponseStatus, Status, Provenance
+from utils.util import trim, translate_to_classes
 
 app = Flask(__name__)
 fileConfig(settings.logging_config)
