@@ -11,7 +11,7 @@ import evidenceretrieval
 import settings
 import stancedetection
 import translator
-from org.diceresearch.nebula.veracity_detection import predictions
+from veracity_detection import predictions
 
 
 def goNextLevel(identifier):
