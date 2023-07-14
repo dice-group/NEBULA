@@ -76,6 +76,8 @@ def status():
     args = request.args
     id = args.get('id')
     result = get_result_from_id(id)
+    if isinstance(result, Response):
+        return result
     # clean up result
     mapped_result = do_mapping(result)
     return Response(mapped_result, status=200, mimetype='application/json')
@@ -89,6 +91,8 @@ def raw_status():
     args = request.args
     id = args.get('id')
     result = get_result_from_id(id)
+    if isinstance(result, Response):
+        return result
     result = get_json_with_db_columns(result)
     return Response(result, status=200, mimetype='application/json')
 
