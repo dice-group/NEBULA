@@ -99,11 +99,33 @@ def select_basedon_id(identifier):
             logging.debug("The SQLite connection is closed")
     return result
 
+def select_one_basedon_text(text):
+    try:
+        conn = sqlite3.connect(settings.database_name)
+        cursor = conn.cursor()
+        cursor.execute(f"SELECT * FROM {settings.results_table_name} where {settings.results_inputtext_column_name} = '" + text + "' ORDER BY STAGE_NUMBER DESC, CHECK_TIMESTAMP DESC limit 1")
+        record = cursor.fetchall()
+
+        allresults = []
+        for row in record:
+            row_dic = {}
+            for idx, col in enumerate(cursor.description):
+                row_dic[col[0]] = row[idx]
+            allresults.append(row_dic)
+        finalJson = json.dumps(allresults)
+        cursor.close()
+    except sqlite3.Error as error:
+        logging.error("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+            logging.debug("The SQLite connection is closed")
+    return finalJson
 def select_basedon_text(text):
     try:
         conn = sqlite3.connect(settings.database_name)
         cursor = conn.cursor()
-        cursor.execute(f"SELECT * FROM {settings.results_table_name} where {settings.results_inputtext_column_name} = '" + text + "'")
+        cursor.execute(f"SELECT * FROM {settings.results_table_name} where {settings.results_inputtext_column_name} = '" + text + "' ORDER BY STAGE_NUMBER DESC, CHECK_TIMESTAMP DESC")
         record = cursor.fetchall()
 
         allresults = []

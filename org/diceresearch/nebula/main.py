@@ -95,7 +95,8 @@ def textsearch():
     args = request.args
     text = args.get('text')
     text = trim(text)
-    result = databasemanager.select_basedon_text(text)
+    result = databasemanager.select_one_basedon_text(text)
+    resultall = databasemanager.select_basedon_text(text)
     if result is None or result == "null":
         result = "{\"error\":\"nothing found with this text : " + text + "\"}"
         return Response(result, status=400, mimetype='application/json')
