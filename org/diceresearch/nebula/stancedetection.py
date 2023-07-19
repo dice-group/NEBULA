@@ -1,3 +1,4 @@
+import json
 import logging
 import threading
 
@@ -5,6 +6,8 @@ import databasemanager
 import orchestrator
 import settings
 import nltk
+
+from data.results import StanceDetectionResult, Stance
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -74,7 +77,7 @@ def do_query(maintext, claim):
 def detect(main_text, claim, identifier):
     result = do_query(main_text, claim)
     if result is None:
-        logging.error("error in retrieving the evidences")
+        logging.error("Error in retrieving the evidences")
     else:
         # save the result in database
         databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, result,
@@ -85,39 +88,27 @@ def detect(main_text, claim, identifier):
         thread.start()
 
 
-def generate_result_tosave(all_results):
-    result = "{\"stances\":["
-    counter = 0
-    for r in all_results:
-        result += r
-        counter = counter + 1
-        if counter < len(all_results):
-            result += ","
-    result += "]}"
-    return result
-
-
-def generate_one_block_of_result(claim, text, url, elastic_score, stance_score):
-    return "{\"claim\":\"" + str(claim) + "\",\"text\":\"" + str(text) + "\",\"url\":\"" + str(
-        url) + "\",\"elastic_score\":" + str(elastic_score) + ",\"stance_score\":" + str(stance_score) + "}"
-
-
 def calculate(evidences, identifier):
-    allResults = []
+    sd_result = StanceDetectionResult()
     for evidence in evidences:
-        result = evidence["result"]
+        # parse results
+        result = json.loads(evidence["result"])
         claim = evidence["query"]  # the text which we search in our documents
         for hit in result["hits"]["hits"]:
             text = hit["_source"]["text"]
             url = hit["_source"]["url"]
             elastic_score = hit["_score"]
             stance_score = do_query(text, claim)
-            allResults.append(generate_one_block_of_result(claim, text, url, elastic_score, stance_score))
-    tosave = generate_result_tosave(allResults)
+            sd_result.add(claim, text, url, elastic_score, float(stance_score))
 
+    tosave = sd_result.get_json()
+    # update database
     databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,
                                 identifier)
+    databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_status,
+                                settings.completed, identifier)
     databasemanager.increase_the_stage(settings.results_table_name, identifier)
+
     # go next level
     thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
     thread.start()
