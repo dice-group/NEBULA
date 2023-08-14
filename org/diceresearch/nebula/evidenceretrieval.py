@@ -11,7 +11,7 @@ from data.results import EvidenceRetrievalResult, QueryResult
 
 def do_query(text):
     try:
-        es = Elasticsearch(settings.elasticsearch_api_endpoint)
+        es = Elasticsearch(settings.elasticsearch_api_endpoint, timeout=30, max_retries=2, retry_on_timeout=True)
         # Define the search query
         search_query = {
             "query": {
@@ -33,7 +33,6 @@ def do_query(text):
         return json.dumps(response.raw)
     except Exception as ex:
         logging.exception(ex)
-        return None
 
 
 def retrieve(input, identifier):
