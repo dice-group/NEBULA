@@ -27,14 +27,16 @@ def predict(json, identifier):
 
     # parse the stance scores only and feed to model
     df = pd.json_normalize(json['stances'])
-    df2 = df.groupby(['claim']).apply(lambda x: x.nlargest(10,['stance_score'])).reset_index(drop=True)
+
+    # TODO 0 pad if not 10
+    df2 = df.groupby(['claim']).apply(lambda x: x.nlargest(10, ['stance_score'])).reset_index(drop=True)
     st_sc = df2.groupby(['claim'])[['stance_score']].agg({"stance_score": list})
     scores = np.array([np.array(score[0], dtype=np.float32) for score in st_sc.values])
 
     # get prediction
     prediction = model.test_model(torch.from_numpy(scores)).numpy()
 
-    df2['wise_score'] = prediction
+    st_sc['wise_score'] = prediction
 
     # update database
     databasemanager.update_step(settings.results_table_name, settings.results_wiseone_column_name,
