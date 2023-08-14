@@ -7,6 +7,8 @@ import requests
 import settings
 import glob
 
+from data.results import ResponseStatus
+
 
 def parse_args():
     """
@@ -53,7 +55,8 @@ def main():
                         status_id = check_status(id)
 
                     with open(args.save, 'a+', encoding='utf8') as f:
-                        f.write('{0}\n'.format(status_id))
+                        small_result = ResponseStatus(id=status_id['id'], wiseone=status_id['wise_one'], status=status_id['status'])
+                        f.write('{0}\n'.format(small_result.get_json()))
 
                     count += 1
                     if count % 100 == 0:
