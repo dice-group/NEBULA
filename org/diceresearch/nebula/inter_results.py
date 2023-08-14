@@ -1,5 +1,6 @@
 import argparse
 import json
+import logging
 import time
 from logging.config import fileConfig
 import requests
@@ -27,6 +28,7 @@ STATUS_URL = args.endpoint+"/rawstatus?id="
 def main():
     fileConfig(settings.logging_config)
 
+    count = 0
     # read all from folder
     for file in glob.glob(args.path+'/*'):
         print(file)
@@ -52,6 +54,10 @@ def main():
 
                     with open(args.save, 'a', encoding='utf8') as f:
                         f.write('{0}\n'.format(status_id))
+
+                    count += 1
+                    if count % 100 == 0:
+                        logging.info('Processed {0} articles'.format(count))
 
 
 def check_status(id):
