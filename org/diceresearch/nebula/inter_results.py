@@ -52,7 +52,7 @@ def main():
                         time.sleep(1)
                         status_id = check_status(id)
 
-                    with open(args.save, 'a', encoding='utf8') as f:
+                    with open(args.save, 'a+', encoding='utf8') as f:
                         f.write('{0}\n'.format(status_id))
 
                     count += 1
