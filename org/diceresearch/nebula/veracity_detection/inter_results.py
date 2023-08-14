@@ -34,7 +34,11 @@ def main():
             data = json.load(fin)
             for item in data:
                 # submit request to check?lang=en&text=
-                check_text = CHECK_URL+item['content']
+                article_text=item['content']
+                if article_text is None:
+                    continue
+                check_text = CHECK_URL+article_text
+
                 req = requests.get(check_text)
 
                 # read status
