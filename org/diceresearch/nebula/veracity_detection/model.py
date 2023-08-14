@@ -2,7 +2,6 @@ import logging
 from typing import List, Optional, Callable
 
 import torch
-from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 
