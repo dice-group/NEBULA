@@ -2,6 +2,7 @@ import argparse
 import glob
 import logging
 import multiprocessing as mp
+import sys
 from collections import Counter
 from logging.config import fileConfig
 from multiprocessing import Pool
@@ -9,6 +10,7 @@ import settings
 from utils.crawler_utils import crawl_file
 import utils.crawler_utils as c_util
 
+sys.path.insert(1, '../')
 
 def parse_args():
     """
