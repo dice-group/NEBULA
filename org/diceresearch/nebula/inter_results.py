@@ -71,7 +71,8 @@ def main():
 
 def check_status(id):
     response = requests.get(STATUS_URL + id).json()
-    if response['status'] == 'ONGOING':
+    cur_status = response['status']
+    if cur_status is None or cur_status == 'ONGOING':
         return False
     else:
         return response
