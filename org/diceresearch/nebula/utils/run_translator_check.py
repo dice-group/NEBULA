@@ -43,40 +43,42 @@ def main():
     # change to logging
     print(mp_handler.error_counter)
 
-def check_translation(file, url, headers, bar_queue=None):
-    if bar_queue:
-        bar_queue.put_nowait(1)
-    with open(file, encoding='utf8') as json_data:
-        try:
+
+def check_translation(file, url, headers, error_counter, bar_queue=None):
+    try:
+        if bar_queue:
+            bar_queue.put_nowait(1)
+        with open(file, encoding='utf8') as json_data:
             # load json and fix if the unescaped quotes if needed
             json_file = sanitize_unescaped_quotes_and_load_json_str(json_data.read())
-        except Exception as e:
-            # bad_json.append(json_data.read())
+
+        translated_text = json_file['maintext']
+        original_text = json_file['originaltext']
+        result = detect(text=translated_text, low_memory=False)
+
+        # if the translation didn't happen, flag it for translation
+        if result['lang'] != 'en':
+            # logging.info('Rejected because of language result {}'.format(result))
+            # files.append(file)
+            # translate it again and overwrite file to file
+            error_counter.update('Language diff {}'.format(diff))
+            redo_fail(json_file, file, url, headers, original_text)
             return
 
-    translated_text = json_file['maintext']
-    original_text = json_file['originaltext']
-    result = detect(text=translated_text, low_memory=False)
-
-    # if the translation didn't happen, flag it for translation
-    if result['lang'] != 'en':
-        # logging.info('Rejected because of language result {}'.format(result))
-        # files.append(file)
-        # translate it again and overwrite file to file
-        redo_fail(json_file, file, url, headers, original_text)
-        return
-
-    # check the difference in sentences instead
-    # if it's not similar, flag it for translation
-    tr_no_sent = len(list(model(translated_text).sents))
-    og_no_sent = len(list(model(original_text).sents))
-    diff = og_no_sent - tr_no_sent
-    if diff > 1:
-        # logging.info('Rejected because of sentence difference {}'.format(diff))
-        # files.append(file)
-        # translate it again and overwrite file to file
-        redo_fail(json_file, file, url, headers, original_text)
-        return
+        # check the difference in sentences instead
+        # if it's not similar, flag it for translation
+        tr_no_sent = len(list(model(translated_text).sents))
+        og_no_sent = len(list(model(original_text).sents))
+        diff = og_no_sent - tr_no_sent
+        if diff > 1:
+            # logging.info('Rejected because of sentence difference {}'.format(diff))
+            # files.append(file)
+            # translate it again and overwrite file to file
+            error_counter.update('Sentence diff {}'.format(diff))
+            redo_fail(json_file, file, url, headers, original_text)
+            return
+    except Exception as e:
+        error_counter.update('{1} failed with exception {0}'.format(e, file))
 
 
 def redo_fail(json_file, file, url, headers, original_text):

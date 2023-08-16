@@ -1,6 +1,6 @@
 from collections import Counter
 import multiprocessing as mp
-
+import crawler_utils
 from tqdm import tqdm
 
 
@@ -27,9 +27,10 @@ class MPHandler(object):
 
     def add_process(self, function, args):
         if self.bar_queue:
-            self.pool.apply_async(function, args=args + (self.bar_queue,), callback=self.collect_result)
+            arg_tuple = (self.error_counter, self.bar_queue,)
         else:
-            self.pool.apply_async(function, args=args, callback=self.collect_result)
+            arg_tuple = (self.error_counter,)
+        self.pool.apply_async(function, args=args + arg_tuple, callback=self.collect_result)
 
     def close_pool(self):
         self.pool.close()
