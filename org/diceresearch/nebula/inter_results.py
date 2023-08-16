@@ -1,12 +1,14 @@
 import argparse
+import glob
 import json
 import logging
 import time
 from logging.config import fileConfig
-import requests
-import settings
-import glob
 
+import pandas as pd
+import requests
+
+import settings
 from data.results import ResponseStatus
 
 
@@ -22,9 +24,10 @@ def parse_args():
     # parser.add_argument('--save-fails', help='Path where to save the failed ids')
     return parser.parse_args()
 
+
 args = parse_args()
-CHECK_URL = args.endpoint+"/check?lang=en&text="
-STATUS_URL = args.endpoint+"/rawstatus?id="
+CHECK_URL = args.endpoint + "/check?lang=en&text="
+STATUS_URL = args.endpoint + "/rawstatus?id="
 
 
 def main():
@@ -32,16 +35,16 @@ def main():
 
     count = 0
     # read all from folder
-    for file in glob.glob(args.path+'/*'):
+    for file in glob.glob(args.path + '/*'):
         print(file)
         with open(file) as fin:
             data = json.load(fin)
             for item in data:
                 # submit request to check?lang=en&text=
-                article_text=item['content']
+                article_text = item['content']
                 if article_text is None:
                     continue
-                check_text = CHECK_URL+article_text
+                check_text = CHECK_URL + article_text
 
                 req = requests.get(check_text)
 
@@ -55,7 +58,10 @@ def main():
                         status_id = check_status(id)
 
                     with open(args.save, 'a+', encoding='utf8') as f:
-                        small_result = ResponseStatus(id=status_id['id'], wiseone=status_id['wise_one'], status=status_id['status'])
+                        small_result = ResponseStatus(
+                            id=status_id['id'],
+                            wiseone=pd.read_json(status_id['wiseone'], orient='index')['wise_score'].to_json(orient='values'),
+                            status=status_id['status'])
                         f.write('{0}\n'.format(small_result.get_json()))
 
                     count += 1
