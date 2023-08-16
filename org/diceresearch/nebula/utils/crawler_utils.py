@@ -4,15 +4,6 @@ import urllib
 from collections import Counter
 
 from newsplease import NewsPlease
-from tqdm import tqdm
-
-
-def update_bar(q, total):
-    pbar = tqdm(total=total, position=0, leave=True)
-    while True:
-        x = q.get()
-        pbar.update(x)
-
 
 headers = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.64 Safari/537.11',

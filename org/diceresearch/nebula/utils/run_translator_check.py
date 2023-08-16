@@ -1,14 +1,13 @@
 import argparse
 import glob
 import json
-from logging.config import fileConfig
 
 import requests
 import spacy
 from ftlangdetect import detect
-from tqdm import tqdm
 
-import settings
+from utils.mp_handler import MPHandler
+from utils.util import Tape
 
 model = spacy.load('xx_sent_ud_sm')
 
@@ -20,49 +19,64 @@ def parse_args():
     """
     parser = argparse.ArgumentParser()
     parser.add_argument('--path', required=True, help='Dataset folder')
-    parser.add_argument('--save', required=True, help='Path where to save the results')
     return parser.parse_args()
 
 
 def main():
-    fileConfig(settings.logging_config)
     prog_args = parse_args()
-    files = []
-    bad_json = []
+
     url = 'http://neamt1.cs.upb.de:6100/custom-pipeline'
+    url2 = 'http://neamt2.cs.upb.de:6100/custom-pipeline'
+    url3 = 'http://neamt3.cs.upb.de:6100/custom-pipeline'
+    url4 = 'http://neamt4.cs.upb.de:6100/custom-pipeline'
+    url5 = 'http://neamt5.cs.upb.de:6100/custom-pipeline'
     headers = {'Content-Type': 'application/x-www-form-urlencoded'}
-    for file in tqdm(glob.glob(prog_args.path + '**/*.json', recursive=True)):
-        with open(file, encoding='utf8') as json_data:
-            try:
-                # load json and fix if the unescaped quotes if needed
-                json_file = sanitize_unescaped_quotes_and_load_json_str(json_data.read())
-            except Exception as e:
-                bad_json.append(json_data.read())
-                continue
 
-        translated_text = json_file['maintext']
-        original_text = json_file['originaltext']
-        result = detect(text=translated_text, low_memory=False)
+    files = glob.glob(prog_args.path + '**/*.json', recursive=True)
+    mp_handler = MPHandler(5, len(files))
+    tape = Tape([url, url2, url3, url4, url5])  # range(0, prog_args.np)
+    for file in files:
+        url = tape.get_and_inc()
+        mp_handler.add_process(check_translation, (file, url, headers))
+    mp_handler.close_pool()
 
-        # if the translation didn't happen, flag it for translation
-        if result['lang'] != 'en':
-            # logging.info('Rejected because of language result {}'.format(result))
-            files.append(file)
-            # translate it again and overwrite file to file
-            redo_fail(json_file, file, url, headers, original_text)
-            continue
+    # change to logging
+    print(mp_handler.error_counter)
 
-        # check the difference in sentences instead
-        # if it's not similar, flag it for translation
-        tr_no_sent = len(list(model(translated_text).sents))
-        og_no_sent = len(list(model(original_text).sents))
-        diff = og_no_sent - tr_no_sent
-        if diff > 1:
-            # logging.info('Rejected because of sentence difference {}'.format(diff))
-            files.append(file)
-            # translate it again and overwrite file to file
-            redo_fail(json_file, file, url, headers, original_text)
-            continue
+def check_translation(file, url, headers, bar_queue=None):
+    if bar_queue:
+        bar_queue.put_nowait(1)
+    with open(file, encoding='utf8') as json_data:
+        try:
+            # load json and fix if the unescaped quotes if needed
+            json_file = sanitize_unescaped_quotes_and_load_json_str(json_data.read())
+        except Exception as e:
+            # bad_json.append(json_data.read())
+            return
+
+    translated_text = json_file['maintext']
+    original_text = json_file['originaltext']
+    result = detect(text=translated_text, low_memory=False)
+
+    # if the translation didn't happen, flag it for translation
+    if result['lang'] != 'en':
+        # logging.info('Rejected because of language result {}'.format(result))
+        # files.append(file)
+        # translate it again and overwrite file to file
+        redo_fail(json_file, file, url, headers, original_text)
+        return
+
+    # check the difference in sentences instead
+    # if it's not similar, flag it for translation
+    tr_no_sent = len(list(model(translated_text).sents))
+    og_no_sent = len(list(model(original_text).sents))
+    diff = og_no_sent - tr_no_sent
+    if diff > 1:
+        # logging.info('Rejected because of sentence difference {}'.format(diff))
+        # files.append(file)
+        # translate it again and overwrite file to file
+        redo_fail(json_file, file, url, headers, original_text)
+        return
 
 
 def redo_fail(json_file, file, url, headers, original_text):
@@ -75,7 +89,7 @@ def redo_fail(json_file, file, url, headers, original_text):
 
 def post_neamt(url, headers, query):
     encode = {'components': 'mbart_mt', 'lang': 'de', 'query': query}
-    return requests.post(url, data=encode, headers=headers).content.decode('utf-8')
+    return requests.post(url, data=encode, headers=headers, timeout=1200).content.decode('utf-8')
 
 
 def sanitize_unescaped_quotes_and_load_json_str(s: str, strict=False) -> dict:  # type: ignore
