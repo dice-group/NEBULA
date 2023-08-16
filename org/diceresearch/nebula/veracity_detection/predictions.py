@@ -40,7 +40,7 @@ def predict(json, identifier):
 
     # update database
     databasemanager.update_step(settings.results_table_name, settings.results_wiseone_column_name,
-                                df2.to_json(orient='index'), identifier)
+                                st_sc.to_json(orient='index'), identifier)
     databasemanager.update_step(settings.results_table_name, settings.results_wiseone_column_status, settings.completed,
                                 identifier)
     databasemanager.increase_the_stage(settings.results_table_name, identifier)
