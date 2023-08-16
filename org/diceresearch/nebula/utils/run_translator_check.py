@@ -75,7 +75,7 @@ def redo_fail(json_file, file, url, headers, original_text):
 
 def post_neamt(url, headers, query):
     encode = {'components': 'mbart_mt', 'lang': 'de', 'query': query}
-    return requests.post(url, data=encode, headers=headers).json
+    return requests.post(url, data=encode, headers=headers).content.decode('utf-8')
 
 
 def sanitize_unescaped_quotes_and_load_json_str(s: str, strict=False) -> dict:  # type: ignore
