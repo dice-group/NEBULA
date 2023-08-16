@@ -73,3 +73,31 @@ def get_highest_index(arr):
     """
     max_value, max_index = max((val, idx) for idx, val in enumerate(arr))
     return max_index
+
+
+class Tape:
+    """
+
+    """
+    def __init__(self, r):
+        self.r = r
+        self.current = 0
+
+    def length(self):
+        return len(self.r)
+
+    def inc_and_get(self):
+        self.current += 1
+        if self.current > self.length()-1:
+            self.current =- self.length()
+        return self.r[self.current]
+
+    def get_and_inc(self):
+        if self.current > self.length()-1:
+            self.current =- self.length()
+        result = self.r[self.current]
+        self.current += 1
+        return result
+
+    def get(self, i):
+        return self.r[i]
