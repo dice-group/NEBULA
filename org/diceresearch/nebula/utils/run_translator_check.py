@@ -61,7 +61,7 @@ def check_translation(file, url, headers, error_counter, bar_queue=None):
             # logging.info('Rejected because of language result {}'.format(result))
             # files.append(file)
             # translate it again and overwrite file to file
-            error_counter.update('Language diff {}'.format(diff))
+            error_counter.update('Language diff')
             redo_fail(json_file, file, url, headers, original_text)
             return
 
