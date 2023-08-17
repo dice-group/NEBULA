@@ -38,7 +38,7 @@ def check():
     # nd is not defined
     if lang is None:
         lang = "nd"
-    if text is None:
+    if not text:
         return Response(ResponseStatus(status="Error", text="Send the string as [text] argument in query string or body").get_json(), status=400,
                         mimetype='application/json')
     text = trim(text)
