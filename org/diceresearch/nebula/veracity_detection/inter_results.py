@@ -32,7 +32,7 @@ def parse_args():
 
 
 args = parse_args()
-CHECK_URL = args.endpoint + "/check?lang=en&text="
+CHECK_URL = args.endpoint + "/check"
 STATUS_URL = args.endpoint + "/rawstatus?id="
 
 
@@ -58,9 +58,12 @@ def main():
                 article_text = item['content']
                 if not article_text:
                     continue
-                check_text = CHECK_URL + article_text
 
-                req = requests.get(check_text)
+                data = {
+                    'lang': 'en',
+                    'text': article_text
+                }
+                req = requests.post(CHECK_URL, data)
 
                 # read status
                 if req.status_code == 200:
@@ -92,7 +95,8 @@ def main():
                 else:
                     f_result = ResponseStatus(
                         id=count,
-                        article_id=item['id'])
+                        article_id=item['id'],
+                        http_code=req.status_code)
                     fail_save.write('{0}\n'.format(f_result.get_json()))
 
     elapsed = (time.time() - start)
