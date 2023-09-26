@@ -47,7 +47,9 @@ def main():
     for file in glob.glob(args.path + '/*'):
         print(file)
         cur_label=source_labels[str(Path(file).stem)]
-        with open(file) as fin, open(args.save, 'a+', encoding='utf8') as fail_save:
+        with open(file) as fin, \
+                open(args.save, 'a+', encoding='utf8') as save, \
+                open(args.save_fails, 'a+', encoding='utf8') as fail_save:
             data = json.load(fin)
             for item in data:
                 # submit request to check?lang=en&text=
@@ -69,28 +71,33 @@ def main():
                         time.sleep(1)
                         status_id = check_status(id)
 
-                    if status_id['status'] != 'DONE':
+                    if status_id['status'] == 'DONE':
+                        res = pd.read_json(status_id['wiseone'], orient='index')
+                        small_result = ResponseStatus(
+                            id=count,
+                            article_id=item['id'],
+                            stancescore=res['stance_score'].to_json(orient='values'),
+                            wiseone=res['wise_score'].to_json(orient='values'),
+                            label=cur_label,
+                            status=status_id['status'])
+                        save.write('{0}\n'.format(small_result.get_json()))
+                    else:
                         f_result = ResponseStatus(
                             id=count,
                             request_id=status_id['id'],
                             article_id=item['id'],
                             status=status_id['status'])
                         fail_save.write('{0}\n'.format(f_result.get_json()))
-
-                    with open(args.save, 'a+', encoding='utf8') as f:
-                        res = pd.read_json(status_id['wiseone'], orient='index')
-                        small_result = ResponseStatus(
-                            id=count,
-                            article_id= item['id'],
-                            stancescore=res['stance_score'].to_json(orient='values'),
-                            wiseone=res['wise_score'].to_json(orient='values'),
-                            label=cur_label,
-                            status=status_id['status'])
-                        f.write('{0}\n'.format(small_result.get_json()))
-
                     logging.info('Processed {0} articles'.format(count))
+                else:
+                    f_result = ResponseStatus(
+                        id=count,
+                        article_id=item['id'])
+                    fail_save.write('{0}\n'.format(f_result.get_json()))
+
     elapsed = (time.time() - start)
     logging.info('Took {0} for {1} articles'.format(timedelta(seconds=elapsed), count))
+
 
 def check_status(id):
     response = requests.get(STATUS_URL + id).json()
