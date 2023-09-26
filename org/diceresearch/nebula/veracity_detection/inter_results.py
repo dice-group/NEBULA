@@ -88,9 +88,7 @@ def main():
                             status=status_id['status'])
                         f.write('{0}\n'.format(small_result.get_json()))
 
-                    if count == 100:
-                        # logging.info('Processed {0} articles'.format(count))
-                        break # FIXME later. Just want 100 articles for testing atm
+                    logging.info('Processed {0} articles'.format(count))
     elapsed = (time.time() - start)
     logging.info('Took {0} for {1} articles'.format(timedelta(seconds=elapsed), count))
 

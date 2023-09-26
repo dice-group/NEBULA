@@ -4,7 +4,7 @@ Code repository of the [NEBULA](https://nebula.peasec.de/) project.
 ## Environment
 You can use a venv or a conda environment:
 ```
-virtualenv -p python3.8.10 nebula
+python -m venv nebula
 source nebula/bin/activate
 pip install -r requirements.txt
 ```
