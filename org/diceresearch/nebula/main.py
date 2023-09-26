@@ -32,13 +32,16 @@ def start_pipeline(text, lang):
 
 @app.route('/check', methods=['GET', 'POST'])
 def check():
-    args = request.args
+    if request.method == 'GET':
+        args = request.args
+    else:
+        args=request.form
     text = args.get('text')
     lang = args.get('lang')
     # nd is not defined
     if lang is None:
         lang = "nd"
-    if text is None:
+    if not text:
         return Response(ResponseStatus(status="Error", text="Send the string as [text] argument in query string or body").get_json(), status=400,
                         mimetype='application/json')
     text = trim(text)
@@ -73,7 +76,10 @@ def status():
     Outputs selected fields
     :return:
     """
-    args = request.args
+    if request.method == 'GET':
+        args = request.args
+    else:
+        args = request.form
     id = args.get('id')
     result = get_result_from_id(id)
     if isinstance(result, Response):
@@ -88,7 +94,10 @@ def raw_status():
     Outputs everything in the result
     :return:
     """
-    args = request.args
+    if request.method == 'GET':
+        args = request.args
+    else:
+        args = request.form
     id = args.get('id')
     result = get_result_from_id(id)
     if isinstance(result, Response):
@@ -98,7 +107,10 @@ def raw_status():
 
 @app.route('/textsearch', methods=['GET', 'POST'])
 def textsearch():
-    args = request.args
+    if request.method == 'GET':
+        args = request.args
+    else:
+        args = request.form
     text = args.get('text')
     result = databasemanager.select_basedon_text(text)
     if result is None or result == "null":
@@ -136,4 +148,4 @@ def get_json_with_db_columns(input):
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=8080)
+    app.run(host='0.0.0.0',port=80)

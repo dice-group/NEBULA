@@ -14,7 +14,7 @@ individual claims rather than large blocks of text."""
 def check(text, identifier):
     try:
         # create response with a single claim
-        dummy_response = ClaimCheckResult("dummy", text, [Sentence(text, 0, 1)]).get_json()
+        dummy_response = Sentence(text, 0, 1).get_json(in_array=True)
 
         # save in the database
         databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_name,
