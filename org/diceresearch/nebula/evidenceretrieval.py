@@ -11,7 +11,7 @@ from data.results import EvidenceRetrievalResult, QueryResult
 
 def do_query(text):
     try:
-        es = Elasticsearch(settings.elasticsearch_api_endpoint)
+        es = Elasticsearch(settings.elasticsearch_api_endpoint, timeout=30, max_retries=2, retry_on_timeout=True)
         # Define the search query
         search_query = {
             "query": {
@@ -26,21 +26,16 @@ def do_query(text):
         # Execute the search query
         response = es.search(index=settings.elasticsearch_index_name, body=search_query)
 
-        for hit in response["hits"]["hits"]:
-            # Access the document fields
-            logging.info(hit["_source"])
-
         return json.dumps(response.raw)
     except Exception as ex:
         logging.exception(ex)
-        return None
 
 
 def retrieve(input, identifier):
     try:
         # collect results
         er_result = EvidenceRetrievalResult()
-        for claim in input["results"]:
+        for claim in input:
             text = claim["text"]
             result = do_query(text)
             er_result.add(QueryResult(result, text))
