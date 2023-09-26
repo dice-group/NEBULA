@@ -34,9 +34,10 @@ status = "STATUS"
 translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 
 #claimbuster, dummy
-module_claimworthiness = "" # "dummy"
+module_claimworthiness = "claimbuster"
 claimbuster_apikey = os.getenv("API_KEY")
 claimbuster_api_endpoint = "https://idir.uta.edu/claimbuster/api/v2/score/text/sentences/"
+claim_limit=10
 
 elasticsearch_index_name = "nebula"
 elasticsearch_api_endpoint = "http://nebulavm.cs.uni-paderborn.de:9200"
