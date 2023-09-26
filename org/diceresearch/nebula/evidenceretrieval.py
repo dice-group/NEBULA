@@ -26,10 +26,6 @@ def do_query(text):
         # Execute the search query
         response = es.search(index=settings.elasticsearch_index_name, body=search_query)
 
-        for hit in response["hits"]["hits"]:
-            # Access the document fields
-            logging.info(hit["_source"])
-
         return json.dumps(response.raw)
     except Exception as ex:
         logging.exception(ex)
@@ -39,7 +35,7 @@ def retrieve(input, identifier):
     try:
         # collect results
         er_result = EvidenceRetrievalResult()
-        for claim in input["results"]:
+        for claim in input:
             text = claim["text"]
             result = do_query(text)
             er_result.add(QueryResult(result, text))

@@ -10,11 +10,14 @@ class Result(object):
         JSON serializable result
     """
 
-    def get_json(self, is_pretty=False):
+    def get_json(self, is_pretty=False, in_array=False):
+        ob = self.__dict__
+        if in_array:
+            ob = [self.__dict__]
         if is_pretty:
-            return json.dumps(self.__dict__, default=vars, indent=3)
+            return json.dumps(ob, default=vars, indent=3)
         else:
-            return json.dumps(self.__dict__, default=vars)
+            return json.dumps(ob, default=vars)
 
 
 class ClaimCheckResult(Result):
@@ -22,14 +25,13 @@ class ClaimCheckResult(Result):
         Claim check result format
     """
 
-    def __init__(self, version: str, text: str, sentences: list):
+    def __init__(self, sentences: list):
         super().__init__()
-        self.version = version
-        self.sentences = text
         self.results = sentences
 
 
-class Sentence(object):
+
+class Sentence(Result):
     """
         Sentence with corresponding index in the overall text
     """
@@ -120,5 +122,3 @@ class Status(Result):
         self.veracity_score = veracity_score
         self.explanation = explanation
         self.provenance = provenance
-
-
