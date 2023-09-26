@@ -14,6 +14,14 @@ conda activate nebula
 pip install -r requirements.txt
 ```
 
+[imblearn](https://github.com/scikit-learn-contrib/imbalanced-learn) has an issue currently detailed [here](https://github.com/scikit-learn-contrib/imbalanced-learn/issues/996). We've found a workaround by installing the version in a fork of the repository.
+```
+git clone https://github.com/prohde/imbalanced-learn/tree/sklearn-1.3
+cd imbalanced-learn
+git checkout sklearn-1.3
+pip install .
+```
+
 ## Running the Application
 To run the application, simply execute the main.py file using the command:
 ```
