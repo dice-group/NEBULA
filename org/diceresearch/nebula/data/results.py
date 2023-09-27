@@ -25,8 +25,10 @@ class ClaimCheckResult(Result):
         Claim check result format
     """
 
-    def __init__(self, sentences: list):
+    def __init__(self, version: str, text: str, sentences: list):
         super().__init__()
+        self.version = version
+        self.sentences = text
         self.results = sentences
 
 
@@ -54,8 +56,11 @@ class EvidenceRetrievalResult(Result):
     """
         Evidence retrieval result format
     """
-    def __init__(self):
-        self.evidences = list()
+    def __init__(self, evidences=None):
+        if evidences:
+            self.evidences=evidences
+        else:
+            self.evidences = list()
 
     def add(self, query_result: QueryResult):
         self.evidences.append(query_result)
@@ -77,8 +82,11 @@ class StanceDetectionResult(Result):
     """
         Stance detection result format
     """
-    def __init__(self):
-        self.stances = list()
+    def __init__(self, stances=None):
+        if stances:
+            self.stances=stances
+        else:
+            self.stances = list()
 
     def add_stance(self, stance: Stance):
         self.stances.append(stance)
