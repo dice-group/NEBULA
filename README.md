@@ -45,7 +45,7 @@ For POST requests, the text [text] input and optional language input [lang] shou
 Below are some examples of the POST request.
 
 ```shell
-curl -X POST http://nebulavm.cs.upb.de/check -d 'lang=en&text=Text you want to check'
+curl http://nebulavm.cs.upb.de/check -F lang=en -F text="Text I want to check"
 ```
 
 ```python
