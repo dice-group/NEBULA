@@ -15,15 +15,30 @@ from veracity_detection import predictions
 app = Flask(__name__)
 fileConfig(settings.logging_config)
 
+
 @app.route('/test')
 @app.route('/default')
 def test():
-    return Response(ResponseStatus(status="OK").get_json(), status=200, mimetype='application/json')
+    """
+        Tests if the endpoint is up
+
+        :return: An OK status message
+        """
+    return ResponseStatus(status="OK").__dict__
 
 
 def start_pipeline(text, lang):
+    """
+        Starts the fact-checking process
+
+        :param text: Text to be fact checked
+        :param lang: Language the text is in
+        :return: ID that can be used to follow up the fact-checking process
+    """
+    text = trim(text)
     identifier = str(uuid.uuid4().hex)
     databasemanager.initiate_stage(identifier, text, lang)
+
     # call orchestrator
     thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
     thread.start()
@@ -32,25 +47,47 @@ def start_pipeline(text, lang):
 
 @app.route('/check', methods=['GET', 'POST'])
 def check():
+    """
+        Checks a text for veracity.
+        If the language is not specified, or any other than en is specified, the text will be translated to english first.
+        If the text is not specified, it will return an Error.
+
+        :return: ID of the text to be fact checked
+    """
+    # parse arguments
     if request.method == 'GET':
         args = request.args
     else:
         args=request.form
+
     text = args.get('text')
     lang = args.get('lang')
-    # nd is not defined
-    if lang is None:
+
+    # Assign not defined if language is not specified
+    if not lang:
         lang = "nd"
+
+    # Return BadRequest if text is not specified
     if not text:
-        return Response(ResponseStatus(status="Error", text="Send the string as [text] argument in query string or body").get_json(), status=400,
+        return Response(ResponseStatus(status="Error",
+                                       text="Send the string as [text] argument in query string or body").get_json(),
+                        status=400,
                         mimetype='application/json')
-    text = trim(text)
+
+    # Start pipeline
     id = start_pipeline(text, lang)
 
-    return Response(ResponseStatus(id=id).get_json(), status=200, mimetype='application/json')
+    # return id
+    return ResponseStatus(id=id).__dict__
 
 
 def do_mapping(result):
+    """
+        Maps the database result to a json
+        TODO Temporarily computes the aggregate score, this is to be replaced once the second stage is ready
+        :param result:
+        :return: Result as a JSON string
+    """
     tempjson = json.loads(result)
     id = tempjson[0]
     text = tempjson[2]
@@ -76,14 +113,21 @@ def status():
     Outputs selected fields
     :return:
     """
+
+    # parse arguments
     if request.method == 'GET':
         args = request.args
     else:
         args = request.form
     id = args.get('id')
+
+    # fetch result
     result = get_result_from_id(id)
+
+    # if id is not valid, return error
     if isinstance(result, Response):
         return result
+
     # clean up result
     mapped_result = do_mapping(result)
     return Response(mapped_result, status=200, mimetype='application/json')
@@ -94,28 +138,45 @@ def raw_status():
     Outputs everything in the result
     :return:
     """
+
+    # parse arguments
     if request.method == 'GET':
         args = request.args
     else:
         args = request.form
     id = args.get('id')
+
+    # fetch result
     result = get_result_from_id(id)
+
+    # if id is not valid, return error
     if isinstance(result, Response):
         return result
+
+    # parse as json string
     result = get_json_with_db_columns(result)
     return Response(result, status=200, mimetype='application/json')
 
+
 @app.route('/textsearch', methods=['GET', 'POST'])
 def textsearch():
+
+    # parse arguments
     if request.method == 'GET':
         args = request.args
     else:
         args = request.form
     text = args.get('text')
+
+    # searches database for the given text
     result = databasemanager.select_basedon_text(text)
+
+    # return error if not found
     if result is None or result == "null":
         return Response(ResponseStatus(status="Error", text="Nothing found with this text {}".format(text)).get_json(),
                     status=400, mimetype='application/json')
+
+    # returns all results if found
     return Response(ResponseStatus(results=result).get_json(is_pretty=True), status=200, mimetype='application/json')
 
 
