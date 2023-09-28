@@ -1,10 +1,14 @@
+import json
 import logging
 import threading
+
+import pandas as pd
 
 import databasemanager
 import httpmanager
 import orchestrator
 import settings
+
 
 def check(text, identifier):
     try:
@@ -19,15 +23,23 @@ def check(text, identifier):
 
         # Send the POST request to the API and store the api response
         api_response = httpmanager.send_post_json(api_endpoint, payload, request_headers)
-        logging.info(str(api_response))
+
+        # limit the number of claims to the top k
+        json_response = json.loads(api_response)
+        results = pd.json_normalize(json_response, record_path='results')
+        if len(results) > settings.claim_limit:
+            results = results.sort_values('score', ascending=False).head(settings.claim_limit)
 
         # save in the database
         databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_name,
-                                    str(api_response), identifier)
+                                    results.to_json(orient='records'), identifier)
+        databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_status,
+                                    settings.completed, identifier)
         databasemanager.increase_the_stage(settings.results_table_name, identifier)
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
-        databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-        databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
+        logging.exception(e)
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)

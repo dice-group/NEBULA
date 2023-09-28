@@ -4,7 +4,7 @@ Code repository of the [NEBULA](https://nebula.peasec.de/) project.
 ## Environment
 You can use a venv or a conda environment:
 ```
-virtualenv -p python3.8.10 nebula
+python -m venv nebula
 source nebula/bin/activate
 pip install -r requirements.txt
 ```
@@ -34,8 +34,37 @@ The Nebula application provides three methods: **check** ,**status**, **test or 
 The check method accepts both POST and GET requests, and requires a text input to check for accuracy. Optional language input can also be provided for the text.
 
 For POST requests, the text [text] input and optional language input [lang] should be passed in the request body.
-For GET requests, the  text [text] input should be passed in the URL arguments along with the optional language input [lang].
+Below are some examples of the POST request.
 
+```shell
+curl http://nebulavm.cs.upb.de/check -F lang=en -F text="Text I want to check"
+```
+
+```python
+import requests
+
+CHECK_URL = "http://nebulavm.cs.upb.de/check"
+input = {
+    'lang': 'en',
+    'text': 'Text we want to check'
+}
+req = requests.post(CHECK_URL, data=input)
+```
+
+
+For GET requests, the  text [text] input should be passed in the URL arguments along with the optional language input [lang]. 
+Below are some examples of the GET request.
+```shell
+curl --location 'http://nebulavm.cs.upb.de/check?lang=en&text=Text%20you%20want%20to%20check'
+```
+```python
+import requests
+
+CHECK_URL = "http://nebulavm.cs.upb.de/check?lang=en&text=Text%20we%20want%20to%20check"
+req = requests.get(CHECK_URL)
+```
+
+Language specifications:
 ```
     - English : en
     - German : de
