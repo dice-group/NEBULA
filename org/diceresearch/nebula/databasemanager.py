@@ -35,7 +35,7 @@ def getOne(which_table, row_identifier):
         return one
 
     except sqlite3.Error as error:
-        logging.error("Failed to update sqlite table", error)
+        logging.error("Failed to update sqlite table {}".format(error))
     finally:
         if sqliteconnection:
             sqliteconnection.close()

@@ -16,9 +16,13 @@ def send_translation_request(textToTranslate, identifier):
 
         result = httpmanager.send_post(settings.translatorEndpoint, data, headers)
 
-        result = result.replace("\""," ")
+        result = result.replace("\"","")
 
         # save the result in database
+        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, result,
+                                    identifier)
+        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
+                                    settings.completed, identifier)
         databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, result, identifier)
         databasemanager.increase_the_stage(settings.results_table_name, identifier)
         # go next level
@@ -26,6 +30,5 @@ def send_translation_request(textToTranslate, identifier):
         thread.start()
     except Exception as e:
         logging.error(str(e))
-        databasemanager.update_step(settings.results_table_name, "STATUS", "error", identifier)
-        databasemanager.update_step(settings.results_table_name, "ERROR_BODY", str(e), identifier)
-
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
