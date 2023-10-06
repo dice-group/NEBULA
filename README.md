@@ -37,7 +37,7 @@ For POST requests, the text [text] input and optional language input [lang] shou
 Below are some examples of the POST request.
 
 ```shell
-curl http://nebulavm.cs.upb.de/check -F lang=en -F text="Text I want to check"
+curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"lang": "en", "text": "Text I want to check"}'
 ```
 
 ```python
@@ -48,7 +48,7 @@ input = {
     'lang': 'en',
     'text': 'Text we want to check'
 }
-req = requests.post(CHECK_URL, data=input)
+req = requests.post(CHECK_URL, json=input)
 ```
 
 
