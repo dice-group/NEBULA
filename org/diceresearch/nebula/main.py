@@ -58,7 +58,7 @@ def check():
     if request.method == 'GET':
         args = request.args
     else:
-        args=request.form
+        args = request.json
 
     text = args.get('text')
     lang = args.get('lang')
@@ -118,7 +118,7 @@ def status():
     if request.method == 'GET':
         args = request.args
     else:
-        args = request.form
+        args = request.json
     id = args.get('id')
 
     # fetch result
@@ -143,7 +143,7 @@ def raw_status():
     if request.method == 'GET':
         args = request.args
     else:
-        args = request.form
+        args = request.json
     id = args.get('id')
 
     # fetch result
@@ -165,7 +165,7 @@ def textsearch():
     if request.method == 'GET':
         args = request.args
     else:
-        args = request.form
+        args = request.json
     text = args.get('text')
 
     # searches database for the given text
