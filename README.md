@@ -48,7 +48,7 @@ input = {
     'lang': 'en',
     'text': 'Text we want to check'
 }
-req = requests.post(CHECK_URL, data=input)
+req = requests.post(CHECK_URL, json=input)
 ```
 
 
