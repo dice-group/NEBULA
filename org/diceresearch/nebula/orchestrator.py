@@ -59,29 +59,30 @@ def goNextLevel(identifier):
             thread.start()
 
     elif next_stage == 3:
-        # evidence retrival
-        if CLAIM_CHECK_WORTHINESS_RESULT == None:
-            logging.error("The claims worthiness response is null")
+        # evidence retrieval
+        if not CLAIM_CHECK_WORTHINESS_RESULT:
+            logging.error("The claims worthiness response is null or empty")
             databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
             databasemanager.update_step(settings.results_table_name, settings.error_msg,
-                                        "The claims worthiness response is null", identifier)
-        try:
-            jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
+                                        "The claims worthiness response is null or empty", identifier)
+        else:
+            try:
+                jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
 
-            thread = threading.Thread(target=evidenceretrieval.retrieve,
-                                      args=(jsonCheckdClaimsForWorthiness, identifier))
-            thread.start()
-        except JSONDecodeError as exp:
-            logging.exception(exp)
-            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-            databasemanager.update_step(settings.results_table_name, settings.error_msg, str(exp.msg), identifier)
+                thread = threading.Thread(target=evidenceretrieval.retrieve,
+                                          args=(jsonCheckdClaimsForWorthiness, identifier))
+                thread.start()
+            except JSONDecodeError as exp:
+                logging.exception(exp)
+                databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+                databasemanager.update_step(settings.results_table_name, settings.error_msg, str(exp.msg), identifier)
 
     elif next_stage == 4:
         try:
             logging.info("Stance detection")
 
             # no evidence is found
-            if EVIDENCE_RETRIEVAL_RESULT is None:
+            if not EVIDENCE_RETRIEVAL_RESULT:
                 logging.error("Found no evidence")
                 databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
                 databasemanager.update_step(settings.results_table_name, settings.error_msg,
@@ -102,7 +103,7 @@ def goNextLevel(identifier):
     elif next_stage == 5:
         logging.info('Query the trained model')
         try:
-            if STANCE_DETECTION_RESULT is None:
+            if not STANCE_DETECTION_RESULT:
                 logging.error("There are no stances scores")
                 databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
                 databasemanager.update_step(settings.results_table_name, settings.error_msg,
