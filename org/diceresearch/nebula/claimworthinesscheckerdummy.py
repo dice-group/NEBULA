@@ -5,7 +5,7 @@ import databasemanager
 import orchestrator
 import settings
 
-from data.results import ClaimCheckResult, Sentence
+from data.results import Sentence
 
 """This class is designed to store an incoming text as a single claim. It is used for datasets that consist of 
 individual claims rather than large blocks of text."""
