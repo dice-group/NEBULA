@@ -1,19 +1,16 @@
 import argparse
 import glob
 import json
-import logging
 import sys
 import time
 from datetime import timedelta
-from pathlib import Path
+from tqdm import tqdm
 
-sys.path.insert(1, '../')
-from logging.config import fileConfig
+sys.path.insert(0, '../')
 
 import pandas as pd
 import requests
 
-import settings
 from data.results import ResponseStatus
 
 
@@ -37,70 +34,97 @@ STATUS_URL = args.endpoint + "/rawstatus?id="
 
 
 def main():
-    fileConfig(settings.logging_config)
-
     source_labels = pd.read_csv(args.labels, header=0, index_col=0)['label'].to_dict()
+
+    # read saved ids, keep article_id
+    article_ids = set()
+    with open(args.save, 'r', encoding='utf8') as save:
+        lines = save.readlines()
+        for line in lines:
+            a_id = json.loads(line)['article_id']
+            article_ids.add(a_id)
 
     count = 0
     # read all from folder
     start = time.time()
-    for file in glob.glob(args.path + '/*'):
-        print(file)
-        cur_label=source_labels[str(Path(file).stem)]
+    for file in tqdm(glob.glob(args.path + '/*')):
         with open(file) as fin, \
                 open(args.save, 'a+', encoding='utf8') as save, \
                 open(args.save_fails, 'a+', encoding='utf8') as fail_save:
-            data = json.load(fin)
-            for item in data:
-                # submit request to check?lang=en&text=
+            lines = fin.readlines()
+
+            for item2 in lines:
+                item = json.loads(item2)
+                cur_label = source_labels.get(item['source'], -1)
                 count += 1
-                logging.info('Processed {0} articles'.format(count))
-                article_text = item['content']
-                if not article_text:
+
+                art_id = item['id']
+                # check if we already processed it
+                if art_id in article_ids:
+                    print('Already seen this article {0}'.format(count))
                     continue
 
+                article_text = item['new_content']
+                # FIXME
+                if not article_text:
+                    continue
+                if 'Disrupting the Borg is expensive and time consuming! Please help with a gift by clicking the button below.' in article_text:
+                    continue
+                if 'You have not enabled JavaScript!' in article_text:
+                    continue
+                start_article = time.time()
                 data = {
                     'lang': 'en',
                     'text': article_text
                 }
-                req = requests.post(CHECK_URL, data)
+                req = requests.post(CHECK_URL, json=data)
 
                 # read status
                 if req.status_code == 200:
                     id = req.json()['id']
 
                     status_id = check_status(id)
+
+                    # limit to 1 minute processing time
+                    t_end = time.time() + 60
                     while status_id is False:
                         time.sleep(1)
                         status_id = check_status(id)
+                        if time.time() > t_end:
+                            break
 
-                    if status_id['status'] == 'DONE':
+                    if not status_id or status_id['status'] != 'DONE':
+                        print('Problem with {0}th article'.format(count))
+                        if status_id:
+                            s = status_id['status']
+                        else:
+                            s = 'error'
+                        f_result = ResponseStatus(
+                            id=id,
+                            article_id=item['id'],
+                            status=s)
+                        fail_save.write('{0}\n'.format(f_result.get_json()))
+
+                    else:
                         res = pd.read_json(status_id['wiseone'], orient='index')
                         small_result = ResponseStatus(
-                            id=count,
+                            id=id,
                             article_id=item['id'],
                             stancescore=res['stance_score'].to_json(orient='values'),
                             wiseone=res['wise_score'].to_json(orient='values'),
                             label=cur_label,
                             status=status_id['status'])
                         save.write('{0}\n'.format(small_result.get_json()))
-                    else:
-                        f_result = ResponseStatus(
-                            id=count,
-                            request_id=status_id['id'],
-                            article_id=item['id'],
-                            status=status_id['status'])
-                        fail_save.write('{0}\n'.format(f_result.get_json()))
-                    logging.info('Processed {0} articles'.format(count))
                 else:
                     f_result = ResponseStatus(
-                        id=count,
+                        count=count,
                         article_id=item['id'],
                         http_code=req.status_code)
                     fail_save.write('{0}\n'.format(f_result.get_json()))
-
+                article_elapsed = (time.time() - start_article)
+                print('Processed {1}th in {0} seconds'.format(article_elapsed, count))
     elapsed = (time.time() - start)
-    logging.info('Took {0} for {1} articles'.format(timedelta(seconds=elapsed), count))
+    print('Took {0} for {1} articles'.format(timedelta(seconds=elapsed), count))
 
 
 def check_status(id):
