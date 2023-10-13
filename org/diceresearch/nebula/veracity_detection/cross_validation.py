@@ -4,7 +4,7 @@ import random
 from logging.config import fileConfig
 
 import torch
-from imblearn.over_sampling import SMOTE
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 from sklearn.model_selection import KFold
 from torch.utils.data import SubsetRandomSampler
 
@@ -41,7 +41,7 @@ def main():
     else:
         seed = random.randint(0, 1e6)
 
-    oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
+    oversampler = RandomOverSampler(sampling_strategy='auto', random_state=seed)
     train_dataset = StanceDataset(jsonl=training_data, k=10, resample=oversampler)
 
     logging.debug('Seed: {}'.format(seed))
