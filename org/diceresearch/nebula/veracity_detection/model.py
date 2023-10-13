@@ -112,6 +112,7 @@ class MLP(torch.nn.Sequential):
                     optimizer.zero_grad()  # set gradients to 0
                     outputs = self(inputs) #.reshape(-1)  # predict labels
                     loss = loss_function(outputs, labels.unsqueeze(1))  # compute loss between predictions and actual
+                    # loss = loss_function(outputs, labels) # classification
                     loss.backward()  # backward pass
                     optimizer.step()  # optimize
 
