@@ -27,7 +27,7 @@ def parse_args():
     parser = argparse.ArgumentParser(prog='Train WISE\'s First Step')
     parser.add_argument('--train-file', required=True, help='Path to JSONL file to train with')
     parser.add_argument('--test-file', help='Path to JSONL file to test with')
-    parser.add_argument('--save', default='resources/model_1210_tanhmae.pt', help='Path where to save the trained model')
+    parser.add_argument('--save', default='resources/model.pt', help='Path where to save the trained model')
     parser.add_argument('--top-k', default=10, type=int, help='Top k evidence')
     parser.add_argument('--dropout', default=0.5, type=float, help='Dropout rate')
     parser.add_argument('--epochs', default=150, type=int, help='Number of epochs')
@@ -54,7 +54,7 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
     # create model
-    model = MLP(in_channels=args.top_k, hidden_channels=[8, 5, 3, 1],
+    model = MLP(in_channels=args.top_k, hidden_channels=[5, 1],
                 init_weights=torch.nn.init.xavier_uniform_,
                 init_bias=torch.nn.init.zeros_,
                 norm_layer=torch.nn.BatchNorm1d,
