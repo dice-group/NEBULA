@@ -121,6 +121,14 @@ def status():
         args = request.json
     id = args.get('id')
 
+    if id:
+        # Generate a new unique registration token
+        registration_token = str(uuid.uuid4())
+
+        # Update the registration token in the database using your function
+        databasemanager.update_step(settings.results_table_name, settings.results_notificationtoken_column_name,
+                                    registration_token, id)
+
     # fetch result
     result = get_result_from_id(id)
 
@@ -145,6 +153,13 @@ def raw_status():
     else:
         args = request.json
     id = args.get('id')
+
+    if id:
+        registration_token = str(uuid.uuid4())
+
+        # Update the registration token in the database using your function
+        databasemanager.update_step(settings.results_table_name, settings.results_notificationtoken_column_name,
+                                    registration_token, id)
 
     # fetch result
     result = get_result_from_id(id)

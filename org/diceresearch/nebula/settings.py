@@ -19,6 +19,7 @@ results_stancedetection_column_name = "STANCE_DETECTION_RESULT"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
 results_wiseone_column_name = "WISE_ONE_RESULT"
 results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
+results_notificationtoken_column_name = "REGISTRATION_TOKEN"
 
 completed = "COMPLETED"
 done = "DONE"

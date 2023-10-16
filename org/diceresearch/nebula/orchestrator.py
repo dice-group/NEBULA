@@ -13,6 +13,8 @@ import stancedetection
 import translator
 from veracity_detection import predictions
 
+from utils import notification
+
 
 def goNextLevel(identifier):
     logging.info("Orch:" + identifier)
@@ -119,11 +121,18 @@ def goNextLevel(identifier):
 
     elif next_stage == 6:
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
+        registration_token = databasemanager.dataselect_all_of_column(settings.results_notificationtoken_column_name)
+        notification.send_firebase_notification(registration_token,
+                                                "Your Result is Ready!", "Your result is now available.")
+
     elif next_stage == 7:
-        pass
+        databasemanager.delete_from_column(settings.results_table_name,settings.results_notificationtoken_column_name)
     elif next_stage == 8:
         pass
     elif next_stage == 9:
         pass
     else:
         pass
+
+
+
