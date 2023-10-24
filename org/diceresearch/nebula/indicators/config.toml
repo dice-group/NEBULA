@@ -1,0 +1,15 @@
+[layout_and_formal.emojis]
+# angry_emojis: A list of emojis which are to be considered as expressing an angry or upset emotion.
+# total_emojis = Whether to look at the total number of emojis in the given text
+# consecutive_emojis: Whether to consider emojis occurring in a row in the given text
+# consecutive_emoji_count_threshold: The minimum number of emojis occuring in a row
+## in order to be considered an indicator
+# total_emoji_count_threshold: The minimum number of occurrences of an angry emoji before the containing
+## sentence is considered an indicator (since not every usage of emojis, even angry onces,
+## necessarily constitutes an indicator).
+
+angry_emojis = ["😤", "😠", "😡", "🤬", "👿"]
+total_emojis = true
+total_emoji_count_threshold = 3
+consecutive_emojis = true
+consecutive_emoji_count_threshold = 3
