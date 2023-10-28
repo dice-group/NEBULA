@@ -1,15 +1,42 @@
-[layout_and_formal.emojis]
-# angry_emojis: A list of emojis which are to be considered as expressing an angry or upset emotion.
-# total_emojis = Whether to look at the total number of emojis in the given text
-# consecutive_emojis: Whether to consider emojis occurring in a row in the given text
-# consecutive_emoji_count_threshold: The minimum number of emojis occuring in a row
-## in order to be considered an indicator
-# total_emoji_count_threshold: The minimum number of occurrences of an angry emoji before the containing
-## sentence is considered an indicator (since not every usage of emojis, even angry onces,
-## necessarily constitutes an indicator).
+[layout_and_formal]
+enable_capitalization = true
+enable_emojis = true
+enable_hashtags = false
 
+[layout_and_formal.capitalization]
+display_message_warning = """
+Excessive capitalisation attracts attention. This might be used for emotional manipulation."""
+
+[layout_and_formal.emojis]
 angry_emojis = ["😤", "😠", "😡", "🤬", "👿"]
-total_emojis = true
-total_emoji_count_threshold = 3
-consecutive_emojis = true
-consecutive_emoji_count_threshold = 3
+total_emojis.enabled = true
+total_emojis.count_threshold = 3
+consecutive_emojis.enabled = true
+consecutive_emojis.count_threshold = 3
+display_message_warning = """
+The excessive use of emojis can be used by fake news outlets and sources to evoke negative emotions in and manipulate \
+the reader. Serious outlets are not known to use them and thus you should exercise caution by checking against \
+reputable and trustworthy sources."""
+
+[layout_and_formal.hashtags]
+hashtag_count_threshold = 5
+display_message_warning = """
+The excessive use of hashtags can be used by fake news outlets and sources to manipulate search results and \
+trending topics by connecting a topic to unrelated, possibly more popular, topics. \
+Serious outlets are not known to do this and thus you should exercise \
+caution by checking against "reputable and trustworthy sources."""
+
+[layout_and_formal.grammmar]
+languagetool.lang = 'en-US'
+languagetool.cache = 1000 # TODO integrate setting
+languagetool.pipeline_caching = true # TODO integrate setting
+display_message_warning = """
+Grammatical errors were identified. Since official news sources generally pay attention to correct \
+use of grammar, this might indicate unverified information."""
+
+[layout_and_formal.spelling]
+spellchecker.lang = 'en'
+
+[layout_and_formal.punctuation]
+display_message_warning = """
+Excessive punctuation attracts attention. This might be used for emotional manipulation."""
