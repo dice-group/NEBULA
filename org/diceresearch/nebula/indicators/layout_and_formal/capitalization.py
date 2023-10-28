@@ -10,18 +10,22 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
 
         display_message_warning: str = capitalization_config["display_message_warning"]
         if type(display_message_warning) is not str:
-            raise ValueError("Provided setting for capitalization warning message 'display_message_warning' is not "
-                             "correctly defined. Are you sure it is a string?")
+            raise ValueError(
+                "Provided setting for capitalization warning message 'display_message_warning' is not "
+                "correctly defined. Are you sure it is a string?"
+            )
 
         return display_message_warning
     except KeyError as config_not_found_err:
-        logging.error("Incorrect capitalization configuration! Check that all required settings are defined.")
+        logging.error(
+            "Incorrect capitalization configuration! Check that all required settings are defined."
+        )
         raise config_not_found_err
 
 
-def check_for_excessive_capitalization(input_text: str, words: List[str], config: tomlkit.TOMLDocument) \
-        -> Union[bool, Dict[str, Union[str, List[int]]]]:
-
+def check_for_excessive_capitalization(
+    input_text: str, words: List[str], config: tomlkit.TOMLDocument
+) -> Union[bool, Dict[str, Union[str, List[int]]]]:
     display_message_warning: str = _load_settings_from_config(config)
 
     # Initialize list to store positions of all caps letters in the text
@@ -42,9 +46,14 @@ def check_for_excessive_capitalization(input_text: str, words: List[str], config
 
     # Print positions of all caps letters
     if allcaps_positions:
-        results = {"display_message": display_message_warning, "allcaps_positions": allcaps_positions}
+        results = {
+            "display_message": display_message_warning,
+            "allcaps_positions": allcaps_positions,
+        }
         logging.info(display_message_warning)
-        logging.info("Excessive capitalisation is detected in the following positions:\n")
+        logging.info(
+            "Excessive capitalisation is detected in the following positions:\n"
+        )
         for position in allcaps_positions:
             logging.info(f"Position: {position}")
 

@@ -4,6 +4,7 @@ from typing import List, Tuple
 import tomlkit
 from language_tool_python import LanguageTool, Match
 
+
 def _load_settings_from_config(config: tomlkit.TOMLDocument) -> Tuple[str, str]:
     try:
         grammar_config = config["layout_and_formal"]["grammar"]
@@ -34,7 +35,9 @@ def check_incorrect_grammar(input_text: str, config: tomlkit.TOMLDocument):
     # Check for grammar and style errors
 
     language, display_message_warning = _load_settings_from_config(config)
-    tool = LanguageTool(language=language, config={'cacheSize': 1000, 'pipelineCaching': True})
+    tool = LanguageTool(
+        language=language, config={"cacheSize": 1000, "pipelineCaching": True}
+    )
     matches: List[Match] = tool.check(input_text)
 
     # Initialize a list to store grammar errors and positions.
@@ -50,7 +53,10 @@ def check_incorrect_grammar(input_text: str, config: tomlkit.TOMLDocument):
 
     # Output misspelled words (spelling errors).
     if grammar_errors:
-        results = {"display_message": display_message_warning, "grammar_errors": grammar_errors}
+        results = {
+            "display_message": display_message_warning,
+            "grammar_errors": grammar_errors,
+        }
         logging.info(display_message_warning)
         logging.info("The following grammatical mistakes were identified:")
         for error in grammar_errors:
