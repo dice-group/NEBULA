@@ -10,12 +10,16 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
 
         display_message_warning: str = punctuation_config["display_message_warning"]
         if type(display_message_warning) is not str:
-            raise ValueError("Provided setting for punctuation warning message 'display_message_warning' is not "
-                             "correctly defined. Are you sure it is a string?")
+            raise ValueError(
+                "Provided setting for punctuation warning message 'display_message_warning' is not "
+                "correctly defined. Are you sure it is a string?"
+            )
 
         return display_message_warning
     except KeyError as config_not_found_err:
-        logging.error("Incorrect punctuation configuration! Check that all required settings are defined.")
+        logging.error(
+            "Incorrect punctuation configuration! Check that all required settings are defined."
+        )
         raise config_not_found_err
 
 
@@ -24,7 +28,7 @@ def check_excessive_punctuation(input_text: str, config: tomlkit.TOMLDocument):
 
     # Define a RegEx pattern to match excessive punctuation (more than one consecutive punctuation mark)
     # ASK Should this be moved over to the config?
-    excessive_punctuation_pattern = r'[?!.]{2,}'
+    excessive_punctuation_pattern = r"[?!.]{2,}"
 
     # Find matches using the RegEx pattern
     matches = re.finditer(excessive_punctuation_pattern, input_text)
@@ -46,8 +50,10 @@ def check_excessive_punctuation(input_text: str, config: tomlkit.TOMLDocument):
         logging.info("The following punctuation marks are used excessively:")
         for _ in punctuation_positions:
             # FIXME Possible reference before assignment (may lead to runtime error).
-            logging.info(f"Excessive punctuation: '{punctuation_sequence}' (Position: {start_pos}-{end_pos})")
-        
+            logging.info(
+                f"Excessive punctuation: '{punctuation_sequence}' (Position: {start_pos}-{end_pos})"
+            )
+
         return results
     else:
         logging.info("No excessive punctuation has been detected in the input text.")
