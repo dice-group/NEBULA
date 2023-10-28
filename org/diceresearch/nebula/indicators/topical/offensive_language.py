@@ -3,8 +3,7 @@ Offensive language
 
 https://github.com/cardiffnlp/tweetnlp
 """
-
-model_offensive = tweetnlp.load_model('offensive')  # Or `model = tweetnlp.Offensive()`
+lp.load_model('offensive')  # Or `model = tweetnlp.Offensive()`
 results_offensive = model_offensive.predict(text, return_probability=True)
 offensivelanguage_infotext = "An algorithm has identified offensive language in this statement. Offensive language is highly negative and might be used for emotional manipulation."
 
@@ -16,4 +15,5 @@ if results_offensive ["label"] == "offensive":
 else:
     print("This text is not classified as hate speech.")
     offensivelanguage_info = False
+model_offensive = tweetn
 

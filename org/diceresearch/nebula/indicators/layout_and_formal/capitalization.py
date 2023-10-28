@@ -1,8 +1,29 @@
 import logging
-from typing import List, Tuple, Union
+from typing import List, Union, Dict
+
+import tomlkit
 
 
-def check_for_excessive_capitalization(input_text: str, words: List[str]) -> Union[bool, Tuple[List[int], str]]:
+def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
+    try:
+        capitalization_config = config["layout_and_formal"]["capitalization"]
+
+        display_message_warning: str = capitalization_config["display_message_warning"]
+        if type(display_message_warning) is not str:
+            raise ValueError("Provided setting for capitalization warning message 'display_message_warning' is not "
+                             "correctly defined. Are you sure it is a string?")
+
+        return display_message_warning
+    except KeyError as config_not_found_err:
+        logging.error("Incorrect capitalization configuration! Check that all required settings are defined.")
+        raise config_not_found_err
+
+
+def check_for_excessive_capitalization(input_text: str, words: List[str], config: tomlkit.TOMLDocument) \
+        -> Union[bool, Dict[str, Union[str, List[int]]]]:
+
+    display_message_warning: str = _load_settings_from_config(config)
+
     # Initialize list to store positions of all caps letters in the text
     allcaps_positions: List[int] = []
 
@@ -19,23 +40,15 @@ def check_for_excessive_capitalization(input_text: str, words: List[str]) -> Uni
                     allcaps_positions.append(letter_position)
                 current_position = word_start + len(word)
 
-    # Check if any all caps letters were found
-    allcaps_infotext = "Excessive capitalisation attracts attention. This might be used for emotional manipulation."
-    allcaps_info = allcaps_positions, allcaps_infotext
-
     # Print positions of all caps letters
     if allcaps_positions:
-        # print(allcaps_infotext)
-        # print("Excessive capitalisation is detected in the following positions:")
-        logging.info(allcaps_infotext)
-        logging.info("Excessive capitalisation is detected in the following positions:")
+        results = {"display_message": display_message_warning, "allcaps_positions": allcaps_positions}
+        logging.info(display_message_warning)
+        logging.info("Excessive capitalisation is detected in the following positions:\n")
         for position in allcaps_positions:
-            # print(f"Position: {position}")
             logging.info(f"Position: {position}")
 
-        return allcaps_positions, allcaps_infotext
+        return results
     else:
-        # print("No all caps letters have been detected in the text.")
-        logging.info("No all caps letters have been detected in the text.")
-
+        logging.info("No all-caps letters have been detected in the text.")
         return False
