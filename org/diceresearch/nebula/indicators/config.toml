@@ -30,6 +30,7 @@ caution by checking against "reputable and trustworthy sources."""
 languagetool.lang = 'de'
 languagetool.cache = 1000 # TODO integrate setting
 languagetool.pipeline_caching = true # TODO integrate setting
+languagetool.disable_spellchecking = true  # Deaktivieren der Rechtschreibprüfung (Damit nicht doppelt geprüft wird)
 display_message_warning = """
 Grammatical errors were identified. Since official news sources generally pay attention to correct \
 use of grammar, this might indicate unverified information."""
