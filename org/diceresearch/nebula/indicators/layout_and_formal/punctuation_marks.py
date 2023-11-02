@@ -26,9 +26,6 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
 def check_excessive_punctuation(input_text: str, config: tomlkit.TOMLDocument):
     display_message_warning = _load_settings_from_config(config)
 
-    # Define a RegEx pattern to match excessive punctuation (more than one consecutive punctuation mark)
-    # ASK Should this be moved over to the config?
-    excessive_punctuation_pattern = r"[?!.]{2,}"
 
     # Find matches using the RegEx pattern
     matches = re.finditer(excessive_punctuation_pattern, input_text)
