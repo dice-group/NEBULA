@@ -15,7 +15,7 @@ def load_config() -> tomlkit.TOMLDocument:
 
 def run_layout_and_formal_checks(text):
     pass
-
+#ToDo Import check_for_excessive_capitalization, check_for_excessive_emojis, check_for_excessive_hashtags, check_for_incorrect_spelling
 
 def run_rhetorical_checks():
     pass
@@ -23,3 +23,8 @@ def run_rhetorical_checks():
 
 def run_topical_checks():
     pass
+
+
+#ToDo Import Json
+
+#ToDo Save Json
