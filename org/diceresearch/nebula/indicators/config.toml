@@ -27,7 +27,7 @@ Serious outlets are not known to do this and thus you should exercise \
 caution by checking against "reputable and trustworthy sources."""
 
 [layout_and_formal.grammmar]
-languagetool.lang = 'en-US'
+languagetool.lang = 'de'
 languagetool.cache = 1000 # TODO integrate setting
 languagetool.pipeline_caching = true # TODO integrate setting
 display_message_warning = """
@@ -35,7 +35,7 @@ Grammatical errors were identified. Since official news sources generally pay at
 use of grammar, this might indicate unverified information."""
 
 [layout_and_formal.spelling]
-spellchecker.lang = 'en'
+spellchecker.lang = 'de'
 
 [layout_and_formal.punctuation]
 display_message_warning = """
