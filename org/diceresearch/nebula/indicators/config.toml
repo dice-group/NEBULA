@@ -39,5 +39,6 @@ use of grammar, this might indicate unverified information."""
 spellchecker.lang = 'de'
 
 [layout_and_formal.punctuation]
+excessive_punctuation_pattern = r"[?!.]{2,}"
 display_message_warning = """
 Excessive punctuation attracts attention. This might be used for emotional manipulation."""
