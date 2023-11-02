@@ -62,6 +62,7 @@ def check():
 
     text = args.get('text')
     lang = args.get('lang')
+    registration_token = args.get('token')
 
     # Assign not defined if language is not specified
     if not lang:
@@ -76,6 +77,11 @@ def check():
 
     # Start pipeline
     id = start_pipeline(text, lang)
+
+    # Update the registration token in the database
+    if registration_token:
+        databasemanager.update_step(settings.results_table_name, settings.results_notificationtoken_column_name,
+                                    registration_token, id)
 
     # return id
     return ResponseStatus(id=id).__dict__
@@ -121,14 +127,6 @@ def status():
         args = request.json
     id = args.get('id')
 
-    if id:
-        # Generate a new unique registration token
-        registration_token = str(uuid.uuid4())
-
-        # Update the registration token in the database using your function
-        databasemanager.update_step(settings.results_table_name, settings.results_notificationtoken_column_name,
-                                    registration_token, id)
-
     # fetch result
     result = get_result_from_id(id)
 
@@ -150,16 +148,10 @@ def raw_status():
     # parse arguments
     if request.method == 'GET':
         args = request.args
+
     else:
         args = request.json
     id = args.get('id')
-
-    if id:
-        registration_token = str(uuid.uuid4())
-
-        # Update the registration token in the database using your function
-        databasemanager.update_step(settings.results_table_name, settings.results_notificationtoken_column_name,
-                                    registration_token, id)
 
     # fetch result
     result = get_result_from_id(id)
