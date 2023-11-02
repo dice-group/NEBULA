@@ -120,32 +120,6 @@ def select_basedon_text(text):
             logging.info("The SQLite connection is closed")
     return finalJson
 
-
-def select_all_of_column(which_column):
-    try:
-        conn = sqlite3.connect(settings.database_name)
-        cursor = conn.cursor()
-        # Build and execute the SQL query to select all values in the specified column
-        cursor.execute(f"SELECT {which_column} FROM {settings.results_table_name}")
-        record = cursor.fetchall()
-
-        if record:
-            # Extract the values from the result and return as a list
-            all_results = [col[0] for col in record]
-        else:
-            all_results = []
-        final_json = json.dumps(all_results)
-        cursor.close()
-
-    except sqlite3.Error as error:
-        logging.error("Failed to read data from sqlite table", error)
-    finally:
-        if conn:
-            conn.close()
-            logging.info("The SQLite connection is closed")
-    return final_json
-
-
 def delete_from_column(which_table, which_column):
     try:
         conn = sqlite3.connect(settings.database_name)

@@ -1,7 +1,10 @@
-from firebase_admin import messaging
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, messaging
 
+
+# Initialize Firebase
+cred = credentials.Certificate('../resources/nebula-dev-c8f4a-firebase-adminsdk-acvxz-db4b4471d0.json')
+firebase_admin.initialize_app(cred)
 
 def send_firebase_notification(registration_token, title, body):
     """
@@ -16,10 +19,6 @@ def send_firebase_notification(registration_token, title, body):
         bool: True if the notification was sent successfully, False otherwise.
     """
     try:
-        # Initialize Firebase
-        cred = credentials.Certificate('/Users/nehapokharel/Documents/Nebula/nebula-a7726-firebase-adminsdk-432e4-764225c245.json')
-        firebase_admin.initialize_app(cred)
-
         # Compose the notification message
         message = messaging.Message(
             notification=messaging.Notification(
