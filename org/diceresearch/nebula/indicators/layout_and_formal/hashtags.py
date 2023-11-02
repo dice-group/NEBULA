@@ -16,7 +16,7 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> Tuple[int, str]:
             )
 
         display_message_warning: str = hashtags_config["display_message_warning"]
-        if type(display_message_warning) is not str:
+        if not isinstance(display_message_warning, str):
             raise ValueError(
                 "Provided setting for hashtags warning message 'display_message_warning' is not "
                 "correctly defined. Are you sure it is a string?"

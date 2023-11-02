@@ -1,6 +1,9 @@
 import logging
 from typing import List, Union, Dict
 
+import nltk
+from nltk.tokenize import word_tokenize
+
 import tomlkit
 
 
@@ -9,7 +12,7 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
         capitalization_config = config["layout_and_formal"]["capitalization"]
 
         display_message_warning: str = capitalization_config["display_message_warning"]
-        if type(display_message_warning) is not str:
+        if not isinstance(display_message_warning, str):
             raise ValueError(
                 "Provided setting for capitalization warning message 'display_message_warning' is not "
                 "correctly defined. Are you sure it is a string?"
@@ -24,9 +27,12 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
 
 
 def check_for_excessive_capitalization(
-    input_text: str, words: List[str], config: tomlkit.TOMLDocument
+    input_text: str, config: tomlkit.TOMLDocument
 ) -> Union[bool, Dict[str, Union[str, List[int]]]]:
     display_message_warning: str = _load_settings_from_config(config)
+    nltk.download("punkt")
+
+    words: List[str] = word_tokenize(input_text)
 
     # Initialize list to store positions of all caps letters in the text
     allcaps_positions: List[int] = []

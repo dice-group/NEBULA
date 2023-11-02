@@ -26,19 +26,22 @@ trending topics by connecting a topic to unrelated, possibly more popular, topic
 Serious outlets are not known to do this and thus you should exercise \
 caution by checking against "reputable and trustworthy sources."""
 
-[layout_and_formal.grammmar]
+[layout_and_formal.grammar]
 languagetool.lang = 'de'
 languagetool.cache = 1000 # TODO integrate setting
 languagetool.pipeline_caching = true # TODO integrate setting
-languagetool.disable_spellchecking = true  # Deaktivieren der Rechtschreibprüfung (Damit nicht doppelt geprüft wird)
+languagetool.enable_spellchecking = false  # Deaktivieren der Rechtschreibprüfung (Damit nicht doppelt geprüft wird)
 display_message_warning = """
 Grammatical errors were identified. Since official news sources generally pay attention to correct \
 use of grammar, this might indicate unverified information."""
 
 [layout_and_formal.spelling]
 spellchecker.lang = 'de'
+display_message_warning = """
+Spelling errors were identified. Since official and trustworthy news sources generally pay attention to correct \
+spelling, this might indicate unverified information."""
 
 [layout_and_formal.punctuation]
-excessive_punctuation_pattern = r"[?!.]{2,}"
+excessive_punctuation_pattern = 'r"[?!.]{2,}"'
 display_message_warning = """
 Excessive punctuation attracts attention. This might be used for emotional manipulation."""

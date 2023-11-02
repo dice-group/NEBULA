@@ -23,7 +23,7 @@ def _load_settings_from_config(
             )
 
         total_emojis = emoji_config["total_emojis"]["enabled"]
-        if type(total_emojis) is not bool:
+        if not isinstance(total_emojis, bool):
             raise ValueError(
                 "Configuration for whether to carry out total emoji count checks `total_emojis` is "
                 "incorrect. Are you sure it is either 'true' or 'false' without quotes?"
@@ -32,14 +32,14 @@ def _load_settings_from_config(
         total_emojis_count_threshold: int = emoji_config["total_emojis"][
             "count_threshold"
         ]
-        if type(total_emojis_count_threshold) is not int:
+        if not isinstance(total_emojis_count_threshold, int):
             raise ValueError(
                 "Configuration for the total emoji count threshold `total_emoji_count_threshold` is "
                 "incorrectly defined. Are you sure it is an integer without quotes?"
             )
 
         consecutive_emojis: bool = emoji_config["consecutive_emojis"]["enabled"]
-        if type(consecutive_emojis) is not bool:
+        if not isinstance(consecutive_emojis, bool):
             raise ValueError(
                 "Configuration for whether to carry out consecutive emoji count checks "
                 "`total_emojis` is incorrect. Are you sure it is either 'true' or 'false' without "
@@ -49,15 +49,15 @@ def _load_settings_from_config(
         consecutive_emojis_count_threshold: int = emoji_config["consecutive_emojis"][
             "count_threshold"
         ]
-        if type(consecutive_emojis_count_threshold) is not bool:
+        if not isinstance(consecutive_emojis_count_threshold, int):
             raise ValueError(
                 "Configuration for the consecutive emoji count threshold "
                 "`consecutive_emoji_count_threshold` is incorrectly defined. Are you sure it is an "
                 "integer without quotes?"
             )
 
-        display_message_warning: str = emoji_config["display_message"]
-        if type(display_message_warning) is not bool:
+        display_message_warning: str = emoji_config["display_message_warning"]
+        if not isinstance(display_message_warning, str):
             raise ValueError(
                 "Configuration for the warning display message for emojis is of incorrect type. Are you "
                 "sure it is a string?"

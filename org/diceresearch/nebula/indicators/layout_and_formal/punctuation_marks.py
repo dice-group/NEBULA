@@ -9,7 +9,7 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
         punctuation_config = config["layout_and_formal"]["punctuation"]
 
         display_message_warning: str = punctuation_config["display_message_warning"]
-        if type(display_message_warning) is not str:
+        if not isinstance(display_message_warning, str):
             raise ValueError(
                 "Provided setting for punctuation warning message 'display_message_warning' is not "
                 "correctly defined. Are you sure it is a string?"
@@ -25,7 +25,6 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> str:
 
 def check_excessive_punctuation(input_text: str, config: tomlkit.TOMLDocument):
     display_message_warning = _load_settings_from_config(config)
-
 
     # Find matches using the RegEx pattern
     matches = re.finditer(excessive_punctuation_pattern, input_text)
