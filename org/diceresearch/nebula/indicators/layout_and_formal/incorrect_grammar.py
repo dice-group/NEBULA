@@ -5,25 +5,34 @@ import tomlkit
 from language_tool_python import LanguageTool, Match
 
 
-def _load_settings_from_config(config: tomlkit.TOMLDocument) -> Tuple[str, str]:
+def _load_settings_from_config(config: tomlkit.TOMLDocument) -> Tuple[str, str, bool]:
     try:
         grammar_config = config["layout_and_formal"]["grammar"]
 
         language: str = grammar_config["languagetool"]["lang"]
-        if type(language) is not str:
+        if not isinstance(language, str):
             raise ValueError(
                 "Provided setting for LanguageTool language 'language' is not "
                 "correctly defined. Are you sure it is a string?"
             )
 
         display_message_warning: str = grammar_config["display_message_warning"]
-        if type(display_message_warning) is not str:
+        if not isinstance(display_message_warning, str):
             raise ValueError(
                 "Provided setting for grammar check warning message 'display_message_warning' is not "
                 "correctly defined. Are you sure it is a string?"
             )
 
-        return language, display_message_warning
+        disable_spellchecking: bool = grammar_config["languagetool"][
+            "enable_spellchecking"
+        ]
+        if not isinstance(disable_spellchecking, bool):
+            raise ValueError(
+                "Provided setting for LanguageTool spellchecking 'enable_spellchecking' is not "
+                "correctly defined. Are you sure it is a string?"
+            )
+
+        return language, display_message_warning, disable_spellchecking
     except KeyError as config_not_found_err:
         logging.error(
             "Incorrect grammar configuration! Check that all required settings are defined."
@@ -34,7 +43,11 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument) -> Tuple[str, str]:
 def check_incorrect_grammar(input_text: str, config: tomlkit.TOMLDocument):
     # Check for grammar and style errors
 
-    language, display_message_warning = _load_settings_from_config(config)
+    (
+        language,
+        display_message_warning,
+        disable_spellchecking,
+    ) = _load_settings_from_config(config)
     tool = LanguageTool(
         language=language, config={"cacheSize": 1000, "pipelineCaching": True}
     )

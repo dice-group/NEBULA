@@ -21,14 +21,14 @@ def _load_settings_from_config(config: tomlkit.TOMLDocument):
         spelling_config = config["layout_and_formal"]["spelling"]
 
         spellchecker_lang = spelling_config["spellchecker"]["lang"]
-        if type(spellchecker_lang) is not str:
+        if not isinstance(spellchecker_lang, str):
             raise ValueError(
                 "Provided setting for spelling language 'spellchecker.lang' is not "
                 "correctly defined. Are you sure it is a string?"
             )
 
         display_message_warning: str = spelling_config["display_message_warning"]
-        if type(display_message_warning) is not str:
+        if not isinstance(display_message_warning, str):
             raise ValueError(
                 "Provided setting for capitalization warning message 'display_message_warning' is not "
                 "correctly defined. Are you sure it is a string?"
@@ -64,7 +64,7 @@ def check_incorrect_spelling(
     for misspelled_word in misspelled_words:
         misspelled_words_start_end += [
             (misspelled_word, matched_word.start(), matched_word.end())
-            for matched_word in re.finditer(misspelled_word, words_without_punctuation)
+            for matched_word in re.finditer(misspelled_word, input_text)
         ]
 
     # Output misspelled words (spelling errors)
