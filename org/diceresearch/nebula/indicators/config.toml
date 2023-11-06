@@ -45,3 +45,9 @@ spelling, this might indicate unverified information."""
 excessive_punctuation_pattern = 'r"[?!.]{2,}"'
 display_message_warning = """
 Excessive punctuation attracts attention. This might be used for emotional manipulation."""
+
+[topical.hate_speech]
+
+display_message_warning = """
+An algorithm has classified this statement as hate speech. \
+Hate speech is highly negative and might be used for emotional manipulation."""
