@@ -47,9 +47,22 @@ def _run_layout_and_formal_checks(input_text: str, config: tomlkit.TOMLDocument)
         if indicator_results is not False
     }
 
-
+'''
 def _run_rhetorical_checks():
-    pass
+        results_hate_speech = hate_speech.check_for_hate_speech(
+        input_text=input_text, config=config
+    )
+
+    all_results = {
+        "hate_speech": results_hate_speech,
+    }
+
+    return {
+        indicator: indicator_results
+        for indicator, indicator_results in all_results.items()
+        if indicator_results is not False
+    } 
+'''
 
 
 def _run_topical_checks():
