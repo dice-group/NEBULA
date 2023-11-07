@@ -91,16 +91,12 @@ class StanceDataset(Dataset):
                 # count class frequency
                 self.class_counts.update([label])
 
-                # get top k scores to use as evidence, ignore if done already
+                # 0-pad if needed
                 k = kwargs.get('k')
-                if k < len(scores):
-                    top_k_values, _ = torch.topk(scores, k=k)
-                elif k == len(scores):
-                    top_k_values = scores
-                else:
-                    # TODO should we scale down to the scores we have or zero pad the difference?
-                    top_k_values = scores
-                self.stance_scores.append(top_k_values)
+                padding_length = k - len(scores)
+                if padding_length > 0:
+                    scores = np.pad(scores, (padding_length, 0), mode='constant', constant_values=0)
+                self.stance_scores.append(scores)
 
 
 
