@@ -110,7 +110,7 @@ class MLP(torch.nn.Sequential):
                     labels = sample['labels']
                     inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
                     optimizer.zero_grad()  # set gradients to 0
-                    outputs = self(inputs) #.reshape(-1)  # predict labels
+                    outputs = self(inputs)  # .reshape(-1)  # predict labels
                     loss = loss_function(outputs, labels.unsqueeze(1))  # compute loss between predictions and actual
                     # loss = loss_function(outputs, labels) # classification
                     loss.backward()  # backward pass
@@ -123,7 +123,7 @@ class MLP(torch.nn.Sequential):
 
                 epoch_loss = train_loss_sum / len(training_loader)
                 train_losses.append(epoch_loss)
-                if epoch%20==0:
+                if epoch % 20 == 0:
                     logging.debug('Epoch {0} Training loss {1}'.format(epoch, epoch_loss))
 
                 # evaluate on validation dataset if existing
@@ -154,6 +154,30 @@ class MLP(torch.nn.Sequential):
             sample['predicted_label'] = output
             results.append(sample)
         return results
+
+
+class WISE(torch.nn.Module):
+    def __init__(self, input_size, hidden_size, output_size):
+        super(torch.nn.RNN, self).__init__()
+
+        self.hidden_size = hidden_size
+        self.i2h = torch.nn.Linear(input_size + hidden_size, hidden_size)
+        self.h2o = torch.nn.Linear(hidden_size, output_size)
+        self.softmax = torch.nn.LogSoftmax(dim=1)
+
+    def forward(self, input, hidden):
+        combined = torch.cat((input, hidden), 1)
+        hidden = self.i2h(combined)
+        output = self.h2o(hidden)
+        output = self.softmax(output)
+        return output, hidden
+
+    def initHidden(self):
+        return torch.zeros(1, self.hidden_size)
+
+    def train_model(self):
+        pass
+
 
 class FocalLoss(torch.nn.Module):
     def __init__(self, gamma=2, alpha=None):

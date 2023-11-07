@@ -20,6 +20,7 @@ results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
 results_wiseone_column_name = "WISE_ONE_RESULT"
 results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
 
+skipped = "SKIPPED"
 completed = "COMPLETED"
 done = "DONE"
 ongoing = "ONGOING"

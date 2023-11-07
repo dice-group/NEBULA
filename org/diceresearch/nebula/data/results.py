@@ -65,6 +65,12 @@ class EvidenceRetrievalResult(Result):
     def add(self, query_result: QueryResult):
         self.evidences.append(query_result)
 
+    def is_empty(self):
+        if self.evidences:
+            return True
+        else:
+            return False
+
 
 class Stance(object):
     """
@@ -93,6 +99,12 @@ class StanceDetectionResult(Result):
 
     def add(self, claim: str, text: str, url: str, elastic_score: float, stance_score: float):
         self.stances.append(Stance(claim, text, url, elastic_score, stance_score))
+
+    def is_empty(self):
+        if self.stances:
+            return True
+        else:
+            return False
 
 
 class Provenance(object):

@@ -89,26 +89,40 @@ def detect(main_text, claim, identifier):
 
 
 def calculate(evidences, identifier):
-    sd_result = StanceDetectionResult()
-    for evidence in evidences:
-        # parse results
-        result = json.loads(evidence["result"])
-        claim = evidence["query"]  # the text which we search in our documents
-        for hit in result["hits"]["hits"]:
-            text = hit["_source"]["text"]
-            url = hit["_source"]["url"]
-            elastic_score = hit["_score"]
-            stance_score = do_query(text, claim)
-            sd_result.add(claim, text, url, elastic_score, float(stance_score))
+    try:
+        sd_result = StanceDetectionResult()
+        for evidence in evidences:
+            # skip if evidence is empty
+            if not evidence["result"]:
+                logging.warning("Evidence not found for query {}".format(evidence["query"]))
+                continue
 
-    tosave = sd_result.get_json()
-    # update database
-    databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,
-                                identifier)
-    databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_status,
-                                settings.completed, identifier)
-    databasemanager.increase_the_stage(settings.results_table_name, identifier)
+            # parse results
+            result = json.loads(evidence["result"])
+            claim = evidence["query"]  # the text which we search in our documents
+            for hit in result["hits"]["hits"]:
+                text = hit["_source"]["text"]
+                url = hit["_source"]["url"]
+                elastic_score = hit["_score"]
+                stance_score = do_query(text, claim)
+                sd_result.add(claim, text, url, elastic_score, float(stance_score))
 
-    # go next level
-    thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-    thread.start()
+        # if no scores are found
+        if sd_result.is_empty():
+            raise ValueError('No stance scores have been found.')
+
+        tosave = sd_result.get_json()
+        # update database
+        databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,
+                                    identifier)
+        databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_status,
+                                    settings.completed, identifier)
+        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+
+        # go next level
+        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
+        thread.start()
+    except Exception as e:
+        logging.exception(e)
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
