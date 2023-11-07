@@ -50,7 +50,7 @@ def _run_layout_and_formal_checks(input_text: str, config: tomlkit.TOMLDocument)
 '''
 def _run_rhetorical_checks():
         results_hate_speech = hate_speech.check_for_hate_speech(
-        input_text=input_text, config=config
+        input_text=input_text, config=config        #input_text = translation ?
     )
 
     all_results = {
