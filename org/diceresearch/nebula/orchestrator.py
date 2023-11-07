@@ -2,7 +2,6 @@ import json
 import logging
 import threading
 from datetime import datetime
-from json import JSONDecodeError
 
 import claimworthinesschecker
 import claimworthinesscheckerdummy
@@ -11,6 +10,7 @@ import evidenceretrieval
 import settings
 import stancedetection
 import translator
+from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
 from veracity_detection import predictions
 
 
@@ -50,12 +50,12 @@ def goNextLevel(identifier):
         # translate if language differs from english and we were not provided a translation already
         if INPUT_LANG != "en" and not TRANSLATED_TEXT:
             # start the translation step
-            logging.info("Translation step")
+            logging.debug("Translation step")
             thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
             thread.start()
         else:
             # skip the stage
-            logging.info("Skipping translation")
+            logging.debug("Skipping translation")
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
                                         INPUT_TEXT, identifier)
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
@@ -93,12 +93,12 @@ def goNextLevel(identifier):
         else:
             tempjson = json.loads(EVIDENCE_RETRIEVAL_RESULT)
             temp_evidences = tempjson["evidences"]
-            logging.info(EVIDENCE_RETRIEVAL_RESULT)
+            logging.debug(EVIDENCE_RETRIEVAL_RESULT)
             thread = threading.Thread(target=stancedetection.calculate, args=(temp_evidences, identifier))
             thread.start()
 
     elif next_stage == 5:
-        logging.info('Query the trained model')
+        logging.debug('Query the trained model')
 
         # no stances found
         if STANCE_DETECTION_RESULT is None:
@@ -117,15 +117,3 @@ def goNextLevel(identifier):
         pass
     else:
         pass
-
-
-def log_exception(exception_msg, identifier):
-    """
-    Logs exception to logger and to the database record
-    :param exception_msg: Exception message
-    :param identifier: ID
-    :return:
-    """
-    logging.exception(exception_msg)
-    databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-    databasemanager.update_step(settings.results_table_name, settings.error_msg, exception_msg, identifier)

@@ -7,6 +7,7 @@ import databasemanager
 import orchestrator
 import settings
 from data.results import EvidenceRetrievalResult, QueryResult
+from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
 
 
 def do_query(text):
@@ -65,6 +66,4 @@ def retrieve(input, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
-        logging.exception(e)
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        log_exception(e, identifier)
