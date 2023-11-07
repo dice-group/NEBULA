@@ -27,7 +27,7 @@ def test():
     return ResponseStatus(status="OK").__dict__
 
 
-def start_pipeline(text, lang):
+def start_pipeline(text, translated_text, lang):
     """
         Starts the fact-checking process
 
@@ -37,7 +37,7 @@ def start_pipeline(text, lang):
     """
     text = trim(text)
     identifier = str(uuid.uuid4().hex)
-    databasemanager.initiate_stage(identifier, text, lang)
+    databasemanager.initiate_stage(identifier, text, lang, translated_text)
 
     # call orchestrator
     thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
@@ -61,11 +61,16 @@ def check():
         args = request.json
 
     text = args.get('text')
+    translated_text = args.get('translation')
     lang = args.get('lang')
 
     # Assign not defined if language is not specified
     if not lang:
         lang = "nd"
+
+    # Assign empty string
+    if not translated_text:
+        translated_text = ''
 
     # Return BadRequest if text is not specified
     if not text:
@@ -75,7 +80,7 @@ def check():
                         mimetype='application/json')
 
     # Start pipeline
-    id = start_pipeline(text, lang)
+    id = start_pipeline(text, translated_text, lang)
 
     # return id
     return ResponseStatus(id=id).__dict__

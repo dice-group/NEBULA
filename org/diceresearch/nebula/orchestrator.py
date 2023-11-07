@@ -15,7 +15,12 @@ from veracity_detection import predictions
 
 
 def goNextLevel(identifier):
-    logging.info("Orch:" + identifier)
+    """
+    Increments and executes next stage
+    :param identifier: ID
+    :return:
+    """
+    logging.info("Orch: {}".format(identifier))
     current = databasemanager.getOne(settings.results_table_name, identifier)
     STAGE_NUMBER = current[1]
     INPUT_TEXT = current[2]
@@ -25,32 +30,42 @@ def goNextLevel(identifier):
     EVIDENCE_RETRIEVAL_RESULT = current[8]
     STANCE_DETECTION_RESULT = current[10]
 
-    if current == None:
-        logging.info("Could not find this row in database " + identifier)
+    # If the record could not be found
+    if current is None:
+        logging.info("Could not find this row in database {}".format(identifier))
+
+    # Increase fact checking step
     current_stage = int(STAGE_NUMBER)
-    logging.info("Current stage is : " + str(current_stage))
     next_stage = current_stage + 1
+    logging.info("Current stage is : {}".format(current_stage))
+
     if next_stage == 1:
+        logging.debug("Translation")
+
+        # set status to ongoing and set timestamp
         databasemanager.update_step(settings.results_table_name, settings.status, settings.ongoing, identifier)
         databasemanager.update_step(settings.results_table_name, settings.timestamp, datetime.now().isoformat('#'),
                                     identifier)
-        # translate
-        # language
-        if INPUT_LANG != "en":
+
+        # translate if language differs from english and we were not provided a translation already
+        if INPUT_LANG != "en" and not TRANSLATED_TEXT:
             # start the translation step
             logging.info("Translation step")
             thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
             thread.start()
         else:
-            # update the stage
-            logging.info("Skip the translation")
+            # skip the stage
+            logging.info("Skipping translation")
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
                                         INPUT_TEXT, identifier)
+            databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
+                                        settings.skipped, identifier)
             databasemanager.increase_the_stage(settings.results_table_name, identifier)
             goNextLevel(identifier)
 
     elif next_stage == 2:
-        #claim
+        logging.debug("Claim check")
+
         if settings.module_claimworthiness == "dummy":
             thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(TRANSLATED_TEXT, identifier))
             thread.start()
@@ -59,65 +74,39 @@ def goNextLevel(identifier):
             thread.start()
 
     elif next_stage == 3:
-        # evidence retrieval
-        if not CLAIM_CHECK_WORTHINESS_RESULT:
-            logging.error("The claims worthiness response is null or empty")
-            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-            databasemanager.update_step(settings.results_table_name, settings.error_msg,
-                                        "The claims worthiness response is null or empty", identifier)
-        else:
-            try:
-                jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
+        logging.debug("Evidence retrieval")
 
-                thread = threading.Thread(target=evidenceretrieval.retrieve,
-                                          args=(jsonCheckdClaimsForWorthiness, identifier))
-                thread.start()
-            except JSONDecodeError as exp:
-                logging.exception(exp)
-                databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-                databasemanager.update_step(settings.results_table_name, settings.error_msg, str(exp.msg), identifier)
+        # no claims found
+        if CLAIM_CHECK_WORTHINESS_RESULT is None:
+            log_exception("The claims worthiness response is null.", identifier)
+        else:
+            jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
+            thread = threading.Thread(target=evidenceretrieval.retrieve, args=(jsonCheckdClaimsForWorthiness, identifier))
+            thread.start()
 
     elif next_stage == 4:
-        try:
-            logging.info("Stance detection")
+        logging.debug("Stance detection")
 
-            # no evidence is found
-            if not EVIDENCE_RETRIEVAL_RESULT:
-                logging.error("Found no evidence")
-                databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-                databasemanager.update_step(settings.results_table_name, settings.error_msg,
-                                            "Found no evidence", identifier)
-            else:
-                tempjson = json.loads(EVIDENCE_RETRIEVAL_RESULT)
-                temp_evidences = tempjson["evidences"]
-                logging.info(EVIDENCE_RETRIEVAL_RESULT)
-
-                thread = threading.Thread(target=stancedetection.calculate,
-                                          args=(temp_evidences, identifier))
-                thread.start()
-        except Exception as e:
-            logging.exception("Error {0} with json {1}".format(e, EVIDENCE_RETRIEVAL_RESULT))
-            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-            databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        # no evidence is found
+        if EVIDENCE_RETRIEVAL_RESULT is None:
+            log_exception("The evidence retrieval result is null.", identifier)
+        else:
+            tempjson = json.loads(EVIDENCE_RETRIEVAL_RESULT)
+            temp_evidences = tempjson["evidences"]
+            logging.info(EVIDENCE_RETRIEVAL_RESULT)
+            thread = threading.Thread(target=stancedetection.calculate, args=(temp_evidences, identifier))
+            thread.start()
 
     elif next_stage == 5:
         logging.info('Query the trained model')
-        try:
-            if not STANCE_DETECTION_RESULT:
-                logging.error("There are no stances scores")
-                databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-                databasemanager.update_step(settings.results_table_name, settings.error_msg,
-                                            "There are no stances scores", identifier)
-            else:
-                tempjson = json.loads(STANCE_DETECTION_RESULT)
-                thread = threading.Thread(target=predictions.predict,
-                                              args=(tempjson, identifier))
-                thread.start()
-        except Exception as e:
-            logging.exception(e)
-            databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-            databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
 
+        # no stances found
+        if STANCE_DETECTION_RESULT is None:
+            log_exception("The stance detection result is null.", identifier)
+        else:
+            tempjson = json.loads(STANCE_DETECTION_RESULT)
+            thread = threading.Thread(target=predictions.predict, args=(tempjson, identifier))
+            thread.start()
     elif next_stage == 6:
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
     elif next_stage == 7:
@@ -128,3 +117,15 @@ def goNextLevel(identifier):
         pass
     else:
         pass
+
+
+def log_exception(exception_msg, identifier):
+    """
+    Logs exception to logger and to the database record
+    :param exception_msg: Exception message
+    :param identifier: ID
+    :return:
+    """
+    logging.exception(exception_msg)
+    databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
+    databasemanager.update_step(settings.results_table_name, settings.error_msg, exception_msg, identifier)
