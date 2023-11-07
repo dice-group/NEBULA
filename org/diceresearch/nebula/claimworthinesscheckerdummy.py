@@ -1,4 +1,3 @@
-import logging
 import threading
 
 import databasemanager
@@ -6,6 +5,7 @@ import orchestrator
 import settings
 
 from data.results import Sentence
+from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
 
 """This class is designed to store an incoming text as a single claim. It is used for datasets that consist of 
 individual claims rather than large blocks of text."""
@@ -27,6 +27,4 @@ def check(text, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
-        logging.exception(e)
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        log_exception(e, identifier)

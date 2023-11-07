@@ -1,9 +1,10 @@
-import logging
 import threading
 import httpmanager
 import settings
 import databasemanager
 import orchestrator
+from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
+
 
 def send_translation_request(textToTranslate, identifier):
     try:
@@ -29,6 +30,4 @@ def send_translation_request(textToTranslate, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
-        logging.error(str(e))
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        log_exception(e, identifier)

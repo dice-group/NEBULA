@@ -8,6 +8,7 @@ import settings
 import nltk
 
 from data.results import StanceDetectionResult, Stance
+from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -123,6 +124,4 @@ def calculate(evidences, identifier):
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
-        logging.exception(e)
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        log_exception(e, identifier)
