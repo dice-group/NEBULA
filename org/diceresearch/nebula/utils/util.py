@@ -61,7 +61,7 @@ def read_jsonl_from_file(file):
     :param file: path
     :return: list of JSON objects
     """
-    with open(file, 'r') as json_file:
+    with open(file, 'r', encoding='utf-8') as json_file:
         return [json.loads(line) for line in json_file]
 
 

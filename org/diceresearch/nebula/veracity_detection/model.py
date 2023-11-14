@@ -5,7 +5,86 @@ import torch
 from tqdm import tqdm
 
 
-class MLP(torch.nn.Sequential):
+class BaseWise:
+    """
+    Common behaviour between the NN used in NEBULA
+    """
+
+    def __init__(self):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    def train_model(self,
+                    loss_function: Optional[Callable[..., torch.nn.Module]] = torch.nn.BCELoss,
+                    optimizer: Optional[Callable[..., torch.optim.Optimizer]] = torch.optim.Adam,
+                    epochs: int = 1,
+                    lr: float = 0.001,
+                    training_loader: torch.utils.data.DataLoader = None,
+                    validation_loader: torch.utils.data.DataLoader = None):
+        """
+        Trains the model
+        :param loss_function:       Loss function
+        :param optimizer:           Optimizer
+        :param epochs:              Number of epochs
+        :param lr:                  Learning rate
+        :param training_loader:     Training DataLoader
+        :param validation_loader:   Validation DataLoader if we want to evaluate on the validation split at the end of
+                                    each epoch.
+        :return: Train and validation losses at the end of each epoch.
+        """
+
+        # turn gradient tracking on
+        self.train(True)
+
+        # instantiate chosen
+        optimizer = optimizer(self.parameters(), lr=lr)
+        loss_function = loss_function()
+        logging.debug(loss_function)
+        logging.debug(optimizer)
+
+        train_losses = []
+        val_losses = []
+        for epoch in range(epochs):
+            train_loss_sum = 0
+            with tqdm(training_loader, unit="batch") as tepoch:  # show progress bar as we progress through batches
+                n_batches_processed = 0
+                for sample in tepoch:
+                    tepoch.set_description(f"Epoch {epoch}")
+                    inputs, labels = sample
+                    inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
+                    optimizer.zero_grad()  # set gradients to 0
+                    outputs = self(inputs)  # .reshape(-1)  # predict labels
+                    loss = loss_function(outputs, labels.unsqueeze(1))  # compute loss between predictions and actual
+                    # loss = loss_function(outputs, labels) # classification
+                    loss.backward()  # backward pass
+                    optimizer.step()  # optimize
+
+                    # update progress bar with loss
+                    train_loss_sum += loss.item()
+                    n_batches_processed += 1
+                    tepoch.set_postfix(loss=train_loss_sum / n_batches_processed)
+
+                epoch_loss = train_loss_sum / len(training_loader)
+                train_losses.append(epoch_loss)
+                if epoch % 20 == 0:
+                    logging.debug('Epoch {0} Training loss {1}'.format(epoch, epoch_loss))
+
+                # evaluate on validation dataset if existing
+                if validation_loader:
+                    val_loss = 0
+                    with torch.set_grad_enabled(False):
+                        for x_val, y_val in validation_loader:
+                            x_val, y_val = x_val.to(self.device), y_val.to(self.device)
+                            val_pred = self(x_val)
+                            v_loss = loss_function(val_pred, y_val)
+                            val_loss += v_loss.item()
+                        val_losses.append(val_loss / len(validation_loader))
+        logging.debug('Last epoch training loss {0}'.format(epoch_loss))
+        # turn gradient tracking off
+        self.train(False)
+        return train_losses, val_losses
+
+
+class MLP(torch.nn.Sequential, BaseWise):
     """
     Modified version of https://pytorch.org/vision/main/_modules/torchvision/ops/misc.html#MLP
     - Removed dropout from the output layer
@@ -67,79 +146,8 @@ class MLP(torch.nn.Sequential):
         layers.append(output_layer)
         if activation_output:
             layers.append(activation_output())
-        self.device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
         super().__init__(*layers)
-
-    def train_model(self,
-                    loss_function: Optional[Callable[..., torch.nn.Module]] = torch.nn.BCELoss,
-                    optimizer: Optional[Callable[..., torch.optim.Optimizer]] = torch.optim.Adam,
-                    epochs: int = 1,
-                    lr: float = 0.001,
-                    training_loader: torch.utils.data.DataLoader = None,
-                    validation_loader: torch.utils.data.DataLoader = None):
-        """
-        Trains the model
-        :param loss_function:       Loss function
-        :param optimizer:           Optimizer
-        :param epochs:              Number of epochs
-        :param lr:                  Learning rate
-        :param training_loader:     Training DataLoader
-        :param validation_loader:   Validation DataLoader if we want to evaluate on the validation split at the end of
-                                    each epoch.
-        :return: Train and validation losses at the end of each epoch.
-        """
-
-        # turn gradient tracking on
-        self.train(True)
-
-        # instantiate chosen
-        optimizer = optimizer(self.parameters(), lr=lr)
-        loss_function = loss_function()
-        logging.debug(loss_function)
-        logging.debug(optimizer)
-
-        train_losses = []
-        val_losses = []
-        for epoch in range(epochs):
-            train_loss_sum = 0
-            with tqdm(training_loader, unit="batch") as tepoch:  # show progress bar as we progress through batches
-                n_batches_processed = 0
-                for sample in tepoch:
-                    tepoch.set_description(f"Epoch {epoch}")
-                    inputs = sample['scores']
-                    labels = sample['labels']
-                    inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
-                    optimizer.zero_grad()  # set gradients to 0
-                    outputs = self(inputs)  # .reshape(-1)  # predict labels
-                    loss = loss_function(outputs, labels.unsqueeze(1))  # compute loss between predictions and actual
-                    # loss = loss_function(outputs, labels) # classification
-                    loss.backward()  # backward pass
-                    optimizer.step()  # optimize
-
-                    # update progress bar with loss
-                    train_loss_sum += loss.item()
-                    n_batches_processed += 1
-                    tepoch.set_postfix(loss=train_loss_sum / n_batches_processed)
-
-                epoch_loss = train_loss_sum / len(training_loader)
-                train_losses.append(epoch_loss)
-                if epoch % 20 == 0:
-                    logging.debug('Epoch {0} Training loss {1}'.format(epoch, epoch_loss))
-
-                # evaluate on validation dataset if existing
-                if validation_loader:
-                    val_loss = 0
-                    with torch.set_grad_enabled(False):
-                        for x_val, y_val in validation_loader:
-                            x_val, y_val = x_val.to(self.device), y_val.to(self.device)
-                            val_pred = self(x_val)
-                            v_loss = loss_function(val_pred, y_val)
-                            val_loss += v_loss.item()
-                        val_losses.append(val_loss / len(validation_loader))
-        logging.debug('Last epoch training loss {0}'.format(epoch_loss))
-        # turn gradient tracking off
-        self.train(False)
-        return train_losses, val_losses
+        BaseWise.__init__(self)
 
     def test_model(self, x_test):
         self.eval()
@@ -156,27 +164,22 @@ class MLP(torch.nn.Sequential):
         return results
 
 
-class WISE(torch.nn.Module):
-    def __init__(self, input_size, hidden_size, output_size):
-        super(torch.nn.RNN, self).__init__()
+class WISE(torch.nn.Module, BaseWise):
+    def __init__(self, input_size, hidden_size, num_layers, nonlinearity, bias, batch_first, dropout, bidirectional,
+                 output_size):
+        super(WISE, self).__init__()
+        BaseWise.__init__(self)  # Explicitly call the Base class initializer
+        self.rnn = torch.nn.RNN(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers,
+                                nonlinearity=nonlinearity, bias=bias, batch_first=batch_first, dropout=dropout,
+                                bidirectional=bidirectional)
+        self.fc = torch.nn.Linear(hidden_size, output_size)
+        self.sigmoid = torch.nn.Sigmoid()
 
-        self.hidden_size = hidden_size
-        self.i2h = torch.nn.Linear(input_size + hidden_size, hidden_size)
-        self.h2o = torch.nn.Linear(hidden_size, output_size)
-        self.softmax = torch.nn.LogSoftmax(dim=1)
-
-    def forward(self, input, hidden):
-        combined = torch.cat((input, hidden), 1)
-        hidden = self.i2h(combined)
-        output = self.h2o(hidden)
-        output = self.softmax(output)
-        return output, hidden
-
-    def initHidden(self):
-        return torch.zeros(1, self.hidden_size)
-
-    def train_model(self):
-        pass
+    def forward(self, x):
+        output, _ = self.rnn(x)
+        output = self.fc(output)
+        output = self.sigmoid(output)
+        return output
 
 
 class FocalLoss(torch.nn.Module):

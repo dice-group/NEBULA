@@ -8,8 +8,12 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 import settings
 from data.dataset import StanceDataset
+from torch.nn.utils.rnn import pad_sequence
 from utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes
 from veracity_detection.model import MLP
+
+from org.diceresearch.nebula.data.dataset import WiseDataset, zero_pad_batch
+from org.diceresearch.nebula.veracity_detection.model import WISE
 
 """
     Training script for the first step of a JSON Lines file.
@@ -44,12 +48,14 @@ def main():
     training_data = read_jsonl_from_file(args.train_file)
 
     # convert to Dataset and to DataLoader
-    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k)
-    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True)
+    labels = {0: 1, 1: 0, 2: 0.5} # NELA labels
+    train_dataset = WiseDataset(jsonl=training_data, label_dict=labels)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True,
+                                               collate_fn=zero_pad_batch)
 
     # create model
-    model = torch.nn.RNN(input_size=10, hidden_size=2, num_layers=1,
-                         nonlinearity='tanh', bias=True, batch_first=False, dropout=args.dropout, bidirectional=False)
+    model = WISE(input_size=10, hidden_size=2, num_layers=1,nonlinearity='tanh', bias=True,
+                 batch_first=True, dropout=args.dropout, bidirectional=False, output_size=1)
     logging.info(model)
 
     # train
@@ -76,7 +82,7 @@ def main():
     # Perform a grid search to find optimal thresholds
     # This is only needed for regression
     # cannot use list(train_dataset.class_counts) as we need the class labels ordered
-    class_labels = ['REFUTES', 'NOT ENOUGH INFO', 'SUPPORTS']
+    class_labels = ['1', '2', '0']
     true_labels = [translate(label) for label in true_labels]
 
     # Adjust the range based on the output activation function
