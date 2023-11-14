@@ -44,14 +44,14 @@ class StanceDataset(Dataset):
             self.stance_scores = list()
             self.label = list()
 
-            # read all data
-            X = np.array([item['stance_score'] for element in jsonl for item in element['scores']])
-            num_elements = len(jsonl)
-            num_scores_per_element = len(jsonl[0]['scores'])
-            X = X.reshape(num_elements, num_scores_per_element)
 
             resample = kwargs.get('resample')
             if resample:
+                X = np.array([item['stance_score'] for element in jsonl for item in element['scores']])
+                num_elements = len(jsonl)
+                num_scores_per_element = len(jsonl[0]['scores'])
+                X = X.reshape(num_elements, num_scores_per_element)
+
                 y = np.array([item['label'] for item in jsonl])
                 X_resampled, y_resampled = resample.fit_resample(X, y)
                 p_bar = tqdm(enumerate(X_resampled))
@@ -83,7 +83,11 @@ class StanceDataset(Dataset):
                 padding_length = k - len(scores)
                 if padding_length > 0:
                     scores = np.pad(scores, (padding_length, 0), mode='constant', constant_values=0)
+                elif padding_length < 0:
+                    top_k = df.nlargest(k, 'elastic_score')
+                    scores = torch.tensor(top_k.get('stance_score').values, dtype=torch.float32)
                 self.stance_scores.append(scores)
+        logging.info(f"Class frequency counts: {self.class_counts}")
 
     def __len__(self):
         return len(self.label)

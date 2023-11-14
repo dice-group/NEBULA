@@ -41,6 +41,8 @@ class BaseWise:
         logging.debug(loss_function)
         logging.debug(optimizer)
 
+
+
         train_losses = []
         val_losses = []
         for epoch in range(epochs):
@@ -157,9 +159,9 @@ class MLP(torch.nn.Sequential, BaseWise):
     def predict(self, test_loader):
         results = list()
         for sample in tqdm(test_loader):
-            scores = sample['scores']
+            scores = sample[0]
             output = self(scores).reshape(-1).detach().numpy()
-            sample['predicted_label'] = output
+            sample.append(output)
             results.append(sample)
         return results
 

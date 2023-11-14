@@ -31,8 +31,8 @@ def parse_args():
     parser.add_argument('--save', default='resources/model_2.pt',
                         help='Path where to save the trained model')
     parser.add_argument('--dropout', default=0.0, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=150, type=int, help='Number of epochs')
-    parser.add_argument('--batch-size', default=128, type=int, help='Batch size')
+    parser.add_argument('--epochs', default=10, type=int, help='Number of epochs')
+    parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
                         help='Path where to save the predictions')
@@ -72,7 +72,7 @@ def main():
     # read and predict
     logging.info('Reading test file from {0}'.format(args.test_file))
     test_data = read_jsonl_from_file(args.test_file)
-    test_dataset = StanceDataset(jsonl=test_data, k=args.top_k)
+    test_dataset = WiseDataset(jsonl=test_data, label_dict=labels)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
     results = model.predict(test_loader)
 

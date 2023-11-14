@@ -27,11 +27,11 @@ def parse_args():
     parser = argparse.ArgumentParser(prog='Train WISE\'s First Step')
     parser.add_argument('--train-file', required=True, help='Path to JSONL file to train with')
     parser.add_argument('--test-file', help='Path to JSONL file to test with')
-    parser.add_argument('--save', default='resources/model.pt', help='Path where to save the trained model')
+    parser.add_argument('--save', default='resources/model_sig_mae.pt', help='Path where to save the trained model')
     parser.add_argument('--top-k', default=10, type=int, help='Top k evidence')
     parser.add_argument('--dropout', default=0.5, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=150, type=int, help='Number of epochs')
-    parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
+    parser.add_argument('--epochs', default=50, type=int, help='Number of epochs')
+    parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
                         help='Path where to save the predictions')
@@ -49,9 +49,13 @@ def main():
     # convert to Dataset and to DataLoader
     seed = random.randint(0, 1e6)
     logging.debug('Seed for over sampler: {0}'.format(seed))
-    oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
+
+    # Use this to oversample from the minority classes
+    # oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
+
+    # FEVER labels to int
     label_dict = {"SUPPORTS": 1, "NOT ENOUGH INFO": 0.5, "REFUTES": 0}
-    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, resample=oversampler, label_dict=label_dict)
+    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, label_dict=label_dict)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
     # create model
@@ -78,7 +82,7 @@ def main():
     # read and predict
     logging.info('Reading test file from {0}'.format(args.test_file))
     test_data = read_jsonl_from_file(args.test_file)
-    test_dataset = StanceDataset(jsonl=test_data, k=args.top_k)
+    test_dataset = StanceDataset(jsonl=test_data, k=args.top_k, label_dict=label_dict)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
     results = model.predict(test_loader)
 
@@ -96,6 +100,7 @@ def main():
 
     metrics = calculate_metrics(true_labels, predicted_labels, class_labels)
     logging.info(metrics)
+
 
 def get_regression_metrics(true_labels, predicted_scores, class_labels, regression_range):
     # Perform a grid search to find optimal thresholds
@@ -176,8 +181,8 @@ def load_scores(file):
     true_labels = []
     predicted_scores = []
     for data in file:
-        true_label = data['labels']
-        predicted_score = data['predicted_label']
+        true_label = data[1]
+        predicted_score = data[2]
         true_labels.append(true_label)
         predicted_scores.append(predicted_score)
     return true_labels, predicted_scores
