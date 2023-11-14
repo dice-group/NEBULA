@@ -50,7 +50,8 @@ def main():
     seed = random.randint(0, 1e6)
     logging.debug('Seed for over sampler: {0}'.format(seed))
     oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
-    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, resample=oversampler)
+    label_dict = {"SUPPORTS": 1, "NOT ENOUGH INFO": 0.5, "REFUTES": 0}
+    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, resample=oversampler, label_dict=label_dict)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
     # create model
