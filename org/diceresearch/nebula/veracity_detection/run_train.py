@@ -30,7 +30,7 @@ def parse_args():
     parser.add_argument('--train-file', required=True, help='Path to JSONL file to train with')
     parser.add_argument('--val-file', help='Path to JSONL file to validate with')
     parser.add_argument('--test-file', help='Path to JSONL file to test with')
-    parser.add_argument('--save', default='resources/model_sig_hub.pt', help='Path where to save the trained model')
+    parser.add_argument('--save', default='resources/model_sig_mae.pt', help='Path where to save the trained model')
     parser.add_argument('--top-k', default=10, type=int, help='Top k evidence')
     parser.add_argument('--dropout', default=0.5, type=float, help='Dropout rate')
     parser.add_argument('--epochs', default=200, type=int, help='Number of epochs')
