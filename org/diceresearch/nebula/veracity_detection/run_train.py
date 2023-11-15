@@ -1,6 +1,7 @@
 import argparse
 import logging
 import random
+from collections import Counter
 from logging.config import fileConfig
 
 import numpy as np
@@ -10,6 +11,7 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 
 import settings
 from data.dataset import StanceDataset
+from sklearn.preprocessing import MinMaxScaler
 from utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes, get_highest_index
 from veracity_detection.model import MLP, FocalLoss
 from sklearn.metrics import confusion_matrix, classification_report
@@ -26,12 +28,13 @@ def parse_args():
     """
     parser = argparse.ArgumentParser(prog='Train WISE\'s First Step')
     parser.add_argument('--train-file', required=True, help='Path to JSONL file to train with')
+    parser.add_argument('--val-file', help='Path to JSONL file to validate with')
     parser.add_argument('--test-file', help='Path to JSONL file to test with')
-    parser.add_argument('--save', default='resources/model_sig_mae.pt', help='Path where to save the trained model')
+    parser.add_argument('--save', default='resources/model_sig_hub.pt', help='Path where to save the trained model')
     parser.add_argument('--top-k', default=10, type=int, help='Top k evidence')
     parser.add_argument('--dropout', default=0.5, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=50, type=int, help='Number of epochs')
-    parser.add_argument('--batch-size', default=64, type=int, help='Batch size')
+    parser.add_argument('--epochs', default=200, type=int, help='Number of epochs')
+    parser.add_argument('--batch-size', default=1024, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
                         help='Path where to save the predictions')
@@ -46,32 +49,38 @@ def main():
     logging.info('Reading JSONL file from {}'.format(args.train_file))
     training_data = read_jsonl_from_file(args.train_file)
 
-    # convert to Dataset and to DataLoader
+    # Use this to oversample from the minority classes
     seed = random.randint(0, 1e6)
     logging.debug('Seed for over sampler: {0}'.format(seed))
-
-    # Use this to oversample from the minority classes
-    # oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
+    oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
 
     # FEVER labels to int
     label_dict = {"SUPPORTS": 1, "NOT ENOUGH INFO": 0.5, "REFUTES": 0}
-    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, label_dict=label_dict)
+
+    # convert to Dataset and to DataLoader
+    scaler = None  # MinMaxScaler()
+    train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, resample=None, is_train=True, scaler=scaler, label_dict=label_dict)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True)
+
+    val_data = read_jsonl_from_file(args.val_file)
+    val_dataset = StanceDataset(jsonl=val_data, k=args.top_k, resample=None, is_train=False, scaler=scaler, label_dict=label_dict)
+    val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=1, shuffle=False)
 
     # create model
     model = MLP(in_channels=args.top_k, hidden_channels=[5, 1],
                 init_weights=torch.nn.init.xavier_uniform_,
                 init_bias=torch.nn.init.zeros_,
                 norm_layer=torch.nn.BatchNorm1d,
-                activation_layer=torch.nn.ReLU,
+                activation_layer=torch.nn.LeakyReLU,
                 activation_output=torch.nn.Sigmoid,
                 bias=True, dropout=args.dropout)
     logging.info(model)
 
     # train
-    train_losses, _ = model.train_model(loss_function=torch.nn.SmoothL1Loss,
+    _ = model.train_model(loss_function=torch.nn.L1Loss,
                                         optimizer=torch.optim.Adam,
                                         training_loader=train_loader,
+                                        validation_loader=val_loader,
                                         epochs=args.epochs, lr=args.learning_rate)
 
     # save trained model to file
@@ -82,7 +91,7 @@ def main():
     # read and predict
     logging.info('Reading test file from {0}'.format(args.test_file))
     test_data = read_jsonl_from_file(args.test_file)
-    test_dataset = StanceDataset(jsonl=test_data, k=args.top_k, label_dict=label_dict)
+    test_dataset = StanceDataset(jsonl=test_data, k=args.top_k, label_dict=label_dict, scaler=scaler, is_train=False)
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1, shuffle=False)
     results = model.predict(test_loader)
 
@@ -98,6 +107,7 @@ def main():
     class_labels = ['REFUTES', 'NOT ENOUGH INFO', 'SUPPORTS']
     true_labels, predicted_labels, best_thresholds = get_regression_metrics(true_labels, predicted_scores, class_labels, (0, 1))
 
+    # calculate metrics for best thresholds
     metrics = calculate_metrics(true_labels, predicted_labels, class_labels)
     logging.info(metrics)
 
@@ -117,6 +127,9 @@ def get_regression_metrics(true_labels, predicted_scores, class_labels, regressi
     # Print the best thresholds and F1 score
     predicted_labels = [translate_to_classes(score, best_thresholds[0], best_thresholds[1], class_labels)
                         for score in predicted_scores]
+
+    frequency_count = Counter(predicted_labels)
+    logging.info(f"Label frequency count in the test predictions: {frequency_count}")
 
     return true_labels, predicted_labels, best_thresholds
 
@@ -159,7 +172,8 @@ def calculate_metrics(true_labels, predicted_labels, class_labels):
     # logging.info('Recall Score: {}'.format(recall_n))
     # logging.info('F1 Score: {}'.format(f1_n))
 
-    # logging.info(classification_report(true_labels, predicted_labels))
+    logging.info(classification_report(true_labels, predicted_labels))
+    logging.info(confusion_matrix(true_labels, predicted_labels))
 
     return f1, precision, recall, \
            f1_m, precision_m, recall_m, \
@@ -169,7 +183,7 @@ def calculate_metrics(true_labels, predicted_labels, class_labels):
 
 def translate(label):
     # FIXME
-    if label == 0.0:
+    if label == 0:
         return 'REFUTES'
     elif label == 0.5:
         return 'NOT ENOUGH INFO'

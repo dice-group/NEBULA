@@ -1,6 +1,8 @@
 import logging
 from typing import List, Optional, Callable
 
+from collections import Counter
+
 import torch
 from tqdm import tqdm
 
@@ -71,16 +73,29 @@ class BaseWise:
                     logging.debug('Epoch {0} Training loss {1}'.format(epoch, epoch_loss))
 
                 # evaluate on validation dataset if existing
-                if validation_loader:
+                if validation_loader and epoch % 20 == 0:
+                    self.train(False)
                     val_loss = 0
                     with torch.set_grad_enabled(False):
-                        for x_val, y_val in validation_loader:
+                        for x_val, y_val in tqdm(validation_loader):
                             x_val, y_val = x_val.to(self.device), y_val.to(self.device)
                             val_pred = self(x_val)
-                            v_loss = loss_function(val_pred, y_val)
+                            v_loss = loss_function(val_pred, y_val.unsqueeze(1))
                             val_loss += v_loss.item()
-                        val_losses.append(val_loss / len(validation_loader))
+                        validation_loss = val_loss / len(validation_loader)
+                        logging.debug('Epoch {0} Validation loss {1}'.format(epoch, validation_loss))
+
+                        # early stopping
+                        # if validation loss doesn't increase, stop
+                        if len(val_losses) > 0 and validation_loss > val_losses[-1]:
+                            logging.debug(f"Validation loss went up.")
+                            # break
+                        val_losses.append(validation_loss)
+
+
+                    self.train(True)
         logging.debug('Last epoch training loss {0}'.format(epoch_loss))
+        logging.debug('Last epoch validation loss {0}'.format(validation_loss))
         # turn gradient tracking off
         self.train(False)
         return train_losses, val_losses
