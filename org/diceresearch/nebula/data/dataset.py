@@ -1,6 +1,4 @@
-import json
 import logging
-import random
 from collections import Counter
 
 import numpy as np
@@ -44,49 +42,57 @@ class StanceDataset(Dataset):
             self.stance_scores = list()
             self.label = list()
 
-
             resample = kwargs.get('resample')
-            if resample:
-                X = np.array([item['stance_score'] for element in jsonl for item in element['scores']])
-                num_elements = len(jsonl)
-                num_scores_per_element = len(jsonl[0]['scores'])
-                X = X.reshape(num_elements, num_scores_per_element)
+            k = kwargs.get('k')
+            stance_scores = list()
+            logging.info(f"Truncating/0-padding scores if needed to {k} dimensions")
+            for element in jsonl:
+                scores = element['scores']
+                df = pd.DataFrame(element['scores'])
+                # 0-pad if needed
+                padding_length = k - len(scores)
+                if padding_length > 0:
+                    scores = np.pad(df.stance_score, (padding_length, 0), mode='constant', constant_values=0, dtype=np.float32)
+                elif padding_length < 0:
+                    top_k = df.nlargest(k, 'elastic_score')
+                    scores = top_k.get('stance_score').values.astype(np.float32)
+                else:
+                    scores = df.stance_score.to_numpy()
+                stance_scores.append(scores)
 
-                y = np.array([item['label'] for item in jsonl])
-                X_resampled, y_resampled = resample.fit_resample(X, y)
-                p_bar = tqdm(enumerate(X_resampled))
-            else:
-                p_bar = tqdm(enumerate(jsonl))
+            # Apply scaling
+            stance_scores = np.vstack(stance_scores)
+            scaler = kwargs.get('scaler')
+            is_train = kwargs.get('is_train')
+            if scaler and is_train:
+                stance_scores = scaler.fit_transform(stance_scores)
+            elif scaler and not is_train:
+                stance_scores = scaler.transform(stance_scores)
+
+            # get all scores and labels
+            X = np.array(stance_scores)
+            y = np.array([item['label'] for item in jsonl])
+
+            # Resample the dataset
+            if resample:
+                logging.info("Resampling the dataset")
+                X, y = resample.fit_resample(X, y)
+
+            p_bar = tqdm(enumerate(X), total=X.shape[0])
 
             for idx, item in p_bar:
                 p_bar.set_description("Processing dataset")
 
-                if resample:
-                    claim_id = idx
-                    label = self.label_dict[y_resampled[idx]]
-                    scores = torch.tensor(item, dtype=torch.float32)
-                else:
-                    claim_id = int(item['id'])
-                    label = self.label_dict[item['label']]
-                    scores_t = item['scores']
-                    df = pd.DataFrame(scores_t)
-                    scores = torch.tensor(df.stance_score, dtype=torch.float32)
+                claim_id = idx  # do we even need an ID?
+                label = self.label_dict[y[idx]]
+                scores = item.astype(np.float32)
 
                 self.claim_id.append(claim_id)
                 self.label.append(label)
+                self.stance_scores.append(scores)
 
                 # count class frequency
                 self.class_counts.update([label])
-
-                # 0-pad if needed
-                k = kwargs.get('k')
-                padding_length = k - len(scores)
-                if padding_length > 0:
-                    scores = np.pad(scores, (padding_length, 0), mode='constant', constant_values=0)
-                elif padding_length < 0:
-                    top_k = df.nlargest(k, 'elastic_score')
-                    scores = torch.tensor(top_k.get('stance_score').values, dtype=torch.float32)
-                self.stance_scores.append(scores)
         logging.info(f"Class frequency counts: {self.class_counts}")
 
     def __len__(self):
