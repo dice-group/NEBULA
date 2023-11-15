@@ -95,7 +95,8 @@ class BaseWise:
 
                     self.train(True)
         logging.debug('Last epoch training loss {0}'.format(epoch_loss))
-        logging.debug('Last epoch validation loss {0}'.format(validation_loss))
+        if validation_loader:
+            logging.debug('Last epoch validation loss {0}'.format(validation_loss))
         # turn gradient tracking off
         self.train(False)
         return train_losses, val_losses

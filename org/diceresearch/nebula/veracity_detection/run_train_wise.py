@@ -31,9 +31,9 @@ def parse_args():
     parser.add_argument('--save', default='resources/model_2.pt',
                         help='Path where to save the trained model')
     parser.add_argument('--dropout', default=0.0, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=10, type=int, help='Number of epochs')
+    parser.add_argument('--epochs', default=1000, type=int, help='Number of epochs')
     parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
-    parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
+    parser.add_argument('--learning-rate', default=1e-2, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
                         help='Path where to save the predictions')
     return parser.parse_args()
@@ -54,12 +54,12 @@ def main():
                                                collate_fn=zero_pad_batch)
 
     # create model
-    model = WISE(input_size=10, hidden_size=2, num_layers=1,nonlinearity='tanh', bias=True,
+    model = WISE(input_size=10, hidden_size=5, num_layers=2,nonlinearity='relu', bias=True,
                  batch_first=True, dropout=args.dropout, bidirectional=False, output_size=1)
     logging.info(model)
 
     # train
-    train_losses, _ = model.train_model(loss_function=torch.nn.MSELoss,
+    train_losses, _ = model.train_model(loss_function=torch.nn.L1Loss,
                                         optimizer=torch.optim.Adam,
                                         training_loader=train_loader,
                                         epochs=args.epochs, lr=args.learning_rate)
@@ -86,7 +86,7 @@ def main():
     true_labels = [translate(label) for label in true_labels]
 
     # Adjust the range based on the output activation function
-    best_thresholds = get_optimal_thresholds(thresholds_range=np.arange(-1, 1.0, 0.01),
+    best_thresholds = get_optimal_thresholds(thresholds_range=np.arange(0, 1.0, 0.01),
                                              classes=class_labels, scores=predicted_scores, true_labels=true_labels)
 
     # Print the best thresholds and F1 score
@@ -130,19 +130,19 @@ def main():
 def translate(label):
     # FIXME
     if label == 0.0:
-        return 'REFUTES'
+        return '1'
     elif label == 0.5:
-        return 'NOT ENOUGH INFO'
+        return '2'
     else:
-        return 'SUPPORTS'
+        return '0'
 
 
 def load_scores(file):
     true_labels = []
     predicted_scores = []
     for data in file:
-        true_label = data['labels']
-        predicted_score = data['predicted_label']
+        true_label = data[1]
+        predicted_score = data[2]
         true_labels.append(true_label)
         predicted_scores.append(predicted_score)
     return true_labels, predicted_scores
