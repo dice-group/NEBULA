@@ -3,6 +3,7 @@ from typing import List, Optional, Callable
 
 from collections import Counter
 
+import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -55,10 +56,11 @@ class BaseWise:
                     tepoch.set_description(f"Epoch {epoch}")
                     inputs, labels = sample
                     inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
-                    optimizer.zero_grad()  # set gradients to 0
-                    outputs = self(inputs)  # .reshape(-1)  # predict labels
-                    loss = loss_function(outputs, labels.unsqueeze(1))  # compute loss between predictions and actual
+
+                    outputs = self(inputs.reshape(512, 10, 1))[:, -1, :]  # .reshape(-1)  # predict labels
+                    loss = loss_function(outputs.squeeze(-1), labels.unsqueeze(1))  # compute loss between predictions and actual
                     # loss = loss_function(outputs, labels) # classification
+                    optimizer.zero_grad()  # set gradients to 0
                     loss.backward()  # backward pass
                     optimizer.step()  # optimize
 
@@ -198,6 +200,23 @@ class WISE(torch.nn.Module, BaseWise):
         output = self.fc(output)
         output = self.sigmoid(output)
         return output
+
+    def test_model(self, x_test):
+        self.eval()
+        with torch.no_grad():
+            return self(x_test)
+
+    def predict(self, test_loader):
+        results = list()
+        for sample in tqdm(test_loader):
+            scores = sample[0][0]
+            padding_length = 10 - len(scores)
+            if padding_length > 0:
+                scores = np.pad(scores, (padding_length, 0), mode='constant', constant_values=0)
+            output = self(torch.asarray(scores).reshape(1,10,1))[:, -1, :].reshape(-1).detach().numpy()
+            sample.append(output)
+            results.append(sample)
+        return results
 
 
 class FocalLoss(torch.nn.Module):
