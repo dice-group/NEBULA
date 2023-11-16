@@ -15,7 +15,7 @@ CONFIG_PATH: str = "./config.toml"
 
 
 def load_config() -> tomlkit.TOMLDocument:
-    with open(CONFIG_PATH, "rb") as config_file:
+    with open(CONFIG_PATH, "rb") as config_file :
         return load(config_file)
 
 
@@ -90,4 +90,5 @@ if __name__ == "__main__":
     TEST_FILE_PATH = "./testfiles/testfile.json"
     with open(TEST_FILE_PATH, "r") as testfile:
         json_content = json.load(testfile)
-        pprint(run_indicator_check(json_input=json_content))
+        indicator_check_results = run_indicator_check(json_input=json_content)
+        pprint(indicator_check_results)
