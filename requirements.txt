@@ -33,9 +33,10 @@ torch==1.12.0
 tqdm~=4.66.1
 scikit_learn==1.2.2
 nltk~=3.8.1
-fasttext-langdetect==1.0.5
+# fasttext-langdetect==1.0.5
 news-please==1.5.33
 parameterized==0.9.0
 tomlkit~=0.12.1
 pyspellchecker~=0.7.2
 tweetnlp==0.4.4 
+language-tool-python==2.7.1

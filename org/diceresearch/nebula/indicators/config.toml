@@ -27,7 +27,7 @@ Serious outlets are not known to do this and thus you should exercise \
 caution by checking against "reputable and trustworthy sources."""
 
 [layout_and_formal.grammar]
-languagetool.lang = 'de'
+languagetool.lang = 'de-DE'
 languagetool.cache = 1000 # TODO integrate setting
 languagetool.pipeline_caching = true # TODO integrate setting
 languagetool.enable_spellchecking = false  # Deaktivieren der Rechtschreibprüfung (Damit nicht doppelt geprüft wird)
