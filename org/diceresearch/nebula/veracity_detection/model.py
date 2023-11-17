@@ -1,9 +1,6 @@
 import logging
 from typing import List, Optional, Callable
 
-from collections import Counter
-
-import numpy as np
 import torch
 from tqdm import tqdm
 
@@ -44,8 +41,6 @@ class BaseWise:
         logging.debug(loss_function)
         logging.debug(optimizer)
 
-
-
         train_losses = []
         val_losses = []
         for epoch in range(epochs):
@@ -57,8 +52,8 @@ class BaseWise:
                     inputs, labels = sample
                     inputs, labels = inputs.to(self.device), labels.to(self.device)  # pass to gpu (or not)
 
-                    outputs = self(inputs.reshape(512, 10, 1))[:, -1, :]  # .reshape(-1)  # predict labels
-                    loss = loss_function(outputs.squeeze(-1), labels.unsqueeze(1))  # compute loss between predictions and actual
+                    outputs = self(inputs)  # .reshape(-1)  # predict labels
+                    loss = loss_function(outputs, labels.unsqueeze(-1))  # compute loss between predictions and actual
                     # loss = loss_function(outputs, labels) # classification
                     optimizer.zero_grad()  # set gradients to 0
                     loss.backward()  # backward pass
@@ -94,7 +89,6 @@ class BaseWise:
                             # break
                         val_losses.append(validation_loss)
 
-
                     self.train(True)
         logging.debug('Last epoch training loss {0}'.format(epoch_loss))
         if validation_loader:
@@ -102,6 +96,15 @@ class BaseWise:
         # turn gradient tracking off
         self.train(False)
         return train_losses, val_losses
+
+    def predict(self, test_loader):
+        results = list()
+        for sample in tqdm(test_loader):
+            scores = sample[0]
+            output = self(scores).reshape(-1).detach().numpy()
+            sample.append(output)
+            results.append(sample)
+        return results
 
 
 class MLP(torch.nn.Sequential, BaseWise):
@@ -174,15 +177,6 @@ class MLP(torch.nn.Sequential, BaseWise):
         with torch.no_grad():
             return self(x_test)
 
-    def predict(self, test_loader):
-        results = list()
-        for sample in tqdm(test_loader):
-            scores = sample[0]
-            output = self(scores).reshape(-1).detach().numpy()
-            sample.append(output)
-            results.append(sample)
-        return results
-
 
 class WISE(torch.nn.Module, BaseWise):
     def __init__(self, input_size, hidden_size, num_layers, nonlinearity, bias, batch_first, dropout, bidirectional,
@@ -197,7 +191,7 @@ class WISE(torch.nn.Module, BaseWise):
 
     def forward(self, x):
         output, _ = self.rnn(x)
-        output = self.fc(output)
+        output = self.fc(output[:, -1, :])  # on last step
         output = self.sigmoid(output)
         return output
 
@@ -205,18 +199,6 @@ class WISE(torch.nn.Module, BaseWise):
         self.eval()
         with torch.no_grad():
             return self(x_test)
-
-    def predict(self, test_loader):
-        results = list()
-        for sample in tqdm(test_loader):
-            scores = sample[0][0]
-            padding_length = 10 - len(scores)
-            if padding_length > 0:
-                scores = np.pad(scores, (padding_length, 0), mode='constant', constant_values=0)
-            output = self(torch.asarray(scores).reshape(1,10,1))[:, -1, :].reshape(-1).detach().numpy()
-            sample.append(output)
-            results.append(sample)
-        return results
 
 
 class FocalLoss(torch.nn.Module):
