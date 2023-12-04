@@ -14,6 +14,8 @@ try:
          {settings.results_inputlang_column_name}           TEXT,
          {settings.results_translation_column_name}           TEXT,
          {settings.results_translation_column_status}     TEXT,
+         {settings.results_coref_column_name}           TEXT,
+         {settings.results_coref_column_status}     TEXT,
          {settings.results_claimworthiness_column_name} TEXT,
          {settings.results_claimworthiness_column_status} TEXT,
          {settings.results_evidenceretrieval_column_name} TEXT,
