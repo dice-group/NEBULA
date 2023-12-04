@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,7 +24,7 @@ public class RESTController {
 		return "OK!";
 	}
 
-	@GetMapping("/validate")
+	@PostMapping("/validate")
 	public String validate(@RequestParam(value = "text", required = true) String text) {
 		return coref.generateCrR(text);
 	}

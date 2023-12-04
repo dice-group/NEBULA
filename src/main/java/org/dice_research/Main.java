@@ -10,7 +10,6 @@ import org.springframework.context.annotation.ComponentScan;
  *
  */
 @SpringBootApplication
-@EntityScan("org.dice_research")
 @ComponentScan("org.dice_research")
 public class Main {
   public static void main(String[] args) {

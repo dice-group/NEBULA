@@ -7,11 +7,16 @@ from utils.database_utils import update_database, log_exception
 
 
 def send_coref_request(text, identifier):
+    """
+    Sends coreference resolution request
+    :param text: Text to perform on
+    :param identifier: ID
+    :return: Coreferenced input text
+    """
     try:
+        # send request
         data = {"text": text}
-        headers = {"Content-Type": "application/x-www-form-urlencoded; charset=utf-8"}
-
-        result = httpmanager.send_post(settings.coref_endpoint, data, headers)
+        result = httpmanager.send_post(settings.coref_endpoint, data, None)
 
         # save the result in database
         update_database(settings.results_translation_column_name,
