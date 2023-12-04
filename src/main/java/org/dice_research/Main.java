@@ -11,7 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
  */
 @SpringBootApplication
 @EntityScan("org.dice_research")
-@ComponentScan("org.dice_research.fc.config")
+@ComponentScan("org.dice_research.config")
 public class Main {
   public static void main(String[] args) {
     SpringApplication.run(Main.class, args);
