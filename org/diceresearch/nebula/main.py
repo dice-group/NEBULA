@@ -205,13 +205,12 @@ def get_json_with_db_columns(input):
     """
     result = json.loads(input)
     return ResponseStatus(id=result[0], stage_number=result[1], input_text=result[2], input_lang=result[3],
-                              translation=result[4], translation_status=result[5], claim_check=result[6],
-                              claim_check_status=result[7], evidence_retrieval=result[8],
-                              evidence_retrieval_status=result[9], stance_detection=result[10],
-                              stance_detection_status=result[11], wiseone=result[12], wiseone_status=result[13],
-                              status=result[14], version=result[15], error_body=result[16],
-                              check_timestamp=result[17]).get_json(is_pretty=True)
-
+                              translation=result[4], translation_status=result[5], coref=result[6], coref_status=[7],
+                              claim_check=result[8], claim_check_status=result[9], evidence_retrieval=result[10],
+                              evidence_retrieval_status=result[11], stance_detection=result[12],
+                              stance_detection_status=result[13], wiseone=result[14], wiseone_status=result[15],
+                              wise_final=result[16], wise_final_status=result[17], status=result[18], version=result[19],
+                              error_body=result[20], check_timestamp=result[21]).get_json(is_pretty=True)
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0',port=80)

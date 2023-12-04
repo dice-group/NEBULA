@@ -19,8 +19,8 @@ def send_coref_request(text, identifier):
         result = httpmanager.send_post(settings.coref_endpoint, data, None)
 
         # save the result in database
-        update_database(settings.results_translation_column_name,
-                        settings.results_translation_column_status, result, identifier)
+        update_database(settings.results_coref_column_name,
+                        settings.results_coref_column_status, result, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
