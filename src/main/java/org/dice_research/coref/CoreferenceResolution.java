@@ -9,8 +9,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -24,24 +22,49 @@ import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
 import edu.stanford.nlp.util.CoreMap;
 
+/**
+ * Class responsible for the Coreference Resolution
+ */
 public class CoreferenceResolution {
-	private static final Logger LOGGGER = LoggerFactory.getLogger(CoreferenceResolution.class);
 
-	Properties props = null;
+	// CoreNLP properties
+	protected Properties props = null;
 
+	/**
+	 * Empty constructor. Initializes the CoreNLP annotators.
+	 */
 	public CoreferenceResolution() {
 		props = new Properties();
-		props.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner,parse,mention,dcoref");
+		props.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner,parse,dcoref");
 	}
 
+	/**
+	 * Escapes double quotes.
+	 * 
+	 * @param input String to be escaped
+	 * @return Escaped input string
+	 */
 	public static String escapeQuotes(String input) {
 		return input.replace("\"", "\\\"");
 	}
 
+	/**
+	 * Adds spaces to periods without spaces and replaces new lines with single
+	 * spaces.
+	 * 
+	 * @param input
+	 * @return
+	 */
 	public static String fixErrors(String input) {
 		return input.replaceAll("\\.(?!\\s)", ". ").replace("\n", " ").replace("\\n", " ");
 	}
 
+	/**
+	 * Creates a JSONObject from an input string.
+	 * 
+	 * @param input
+	 * @return
+	 */
 	public JSONObject getJson(String input) {
 		input = fixErrors(input);
 		try {
@@ -52,7 +75,16 @@ public class CoreferenceResolution {
 		return null;
 	}
 
-	private static String replaceMentions(CoreMap sentence, Map<Integer, CorefChain> corefChains, Annotation document,
+	/**
+	 * Replaces mentions with the coreferenced equivalents.
+	 * 
+	 * @param sentence     Input document
+	 * @param corefChains  Coreferences
+	 * @param document     Annotated document
+	 * @param sentence_num Number of sentences
+	 * @return Coreferenced input sentence
+	 */
+	private String replaceMentions(CoreMap sentence, Map<Integer, CorefChain> corefChains, Annotation document,
 			Integer sentence_num) {
 		// Create a copy of the original sentence text
 		String modifiedSentence = sentence.toString();
@@ -63,9 +95,7 @@ public class CoreferenceResolution {
 		HashMap<String, List<Object>> end_coref = new HashMap<>();
 		HashMap<String, List<Object>> mentionSpan = new HashMap<>();
 		for (CorefChain corefChain : corefChains.values()) {
-
 			if (((HashSet) (corefChain.getMentionMap().values()).toArray()[0]).size() > 1) {
-
 				for (Object coref1 : ((HashSet) (corefChain.getMentionMap().values()).toArray()[0])) {
 					CorefChain.CorefMention representativeMention = corefChain.getRepresentativeMention();
 					if (coref1 == representativeMention) {
@@ -82,16 +112,21 @@ public class CoreferenceResolution {
 						}
 					}
 				}
-
 			}
-
 		}
+
 		if (corefs.size() > 0) {
-			modifiedSentence = replaceSubstring(corefs, start_coref, end_coref, mentionSpan, sentence);
+			modifiedSentence = replaceSubstring(corefs, start_coref, end_coref, sentence);
 		}
 		return modifiedSentence;
 	}
 
+	/**
+	 * Removes square brackets from string
+	 * 
+	 * @param input Input string
+	 * @return String without starting and ending brackets
+	 */
 	private static String removeBrackets(String input) {
 		if (input.startsWith("[") && input.endsWith("]")) {
 			return input.substring(1, input.length() - 1);
@@ -99,6 +134,13 @@ public class CoreferenceResolution {
 		return input;
 	}
 
+	/**
+	 * Adds integer to a list in map values if key is existing, otherwise creates it
+	 * 
+	 * @param map   Map to add to
+	 * @param key   Map key
+	 * @param value Map value - The integer
+	 */
 	private static void addIntegerToMap(Map<String, List<Object>> map, String key, Object value) {
 		// If the key exists in the map, add the value to the existing list
 		if (map.containsKey(key)) {
@@ -112,9 +154,17 @@ public class CoreferenceResolution {
 		}
 	}
 
+	/**
+	 * Replaces substrings
+	 * 
+	 * @param corefs
+	 * @param startIndex
+	 * @param endIndex
+	 * @param document
+	 * @return
+	 */
 	private static String replaceSubstring(HashMap<String, List<Object>> corefs,
-			HashMap<String, List<Object>> startIndex, HashMap<String, List<Object>> endIndex,
-			HashMap<String, List<Object>> rep, CoreMap document) {
+			HashMap<String, List<Object>> startIndex, HashMap<String, List<Object>> endIndex, CoreMap document) {
 		List<String> parts = new ArrayList<>();// original.split("(?=\\W)");
 		int ii = 0;
 		for (CoreLabel label : document.get(CoreAnnotations.TokensAnnotation.class)) {
@@ -152,6 +202,12 @@ public class CoreferenceResolution {
 		return final_res;
 	}
 
+	/**
+	 * Sorts Multimap descendingly by value
+	 * 
+	 * @param map Map to be sorted
+	 * @return Sorted Map
+	 */
 	private static Multimap<Integer, String> sortByValueDescending(Map<String, List<Object>> map) {
 
 		// Create a TreeMultimap to store the reordered data
@@ -178,15 +234,23 @@ public class CoreferenceResolution {
 	 * @return Coreferenced input
 	 */
 	public String generateCrR(String input) {
+		// pipeline is here instead of a class-level attribute to prevent OOMs
 		Annotation document = new Annotation(input);
 		StanfordCoreNLP pipeline = new StanfordCoreNLP(props);
 		pipeline.annotate(document);
 
 		// Replace pronouns and noun phrases with their most typical mentions
-		String resolvedText = replaceCoreferences(input, document);
-		return resolvedText;
+		return replaceCoreferences(input, document);
 	}
 
+	/**
+	 * Generates the coreferenced text by replacing the coreferenced spans in the
+	 * document.
+	 * 
+	 * @param text     Input text
+	 * @param document Annotated document
+	 * @return
+	 */
 	public String replaceCoreferences(String text, Annotation document) {
 		String para = "";
 		Map<Integer, CorefChain> corefChains = document.get(CorefCoreAnnotations.CorefChainAnnotation.class);

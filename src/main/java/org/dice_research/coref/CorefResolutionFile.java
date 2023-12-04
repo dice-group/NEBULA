@@ -11,12 +11,25 @@ import java.util.stream.Stream;
 
 import org.json.JSONObject;
 
-
+/**
+ * This class can be used to run coreference resolution on a file. It creates a
+ * parallel writing thread that appends the results to file as a jsonl file and
+ * other parallel "producer threads" that run the coreference resolution
+ * as a parallel stream.
+ */
 public class CorefResolutionFile extends CoreferenceResolution {
-
+	
+	// The JSONL results file path
 	private String destinationPath;
+	
+	// The writing queue
 	private BlockingQueue<String> queue;
 
+	/**
+	 * Constructor.
+	 * Initializes class-level attributes.
+	 * @param destinationPath
+	 */
 	public CorefResolutionFile(String destinationPath) {
 		super();
 		queue = new LinkedBlockingQueue<String>();
@@ -88,5 +101,4 @@ public class CorefResolutionFile extends CoreferenceResolution {
 		// wait for the thread to finish
 		writingThread.join();
 	}
-
 }
