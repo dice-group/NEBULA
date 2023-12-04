@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.json.JSONObject;
+import org.springframework.stereotype.Component;
 
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Ordering;
@@ -25,6 +26,7 @@ import edu.stanford.nlp.util.CoreMap;
 /**
  * Class responsible for the Coreference Resolution
  */
+@Component
 public class CoreferenceResolution {
 
 	// CoreNLP properties

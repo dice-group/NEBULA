@@ -4,10 +4,10 @@ import numpy as np
 import pandas as pd
 import torch
 
-import settings, orchestrator, databasemanager
+import settings, orchestrator
+from utils.database_utils import update_database, log_exception
 from veracity_detection.aggregation import AggregationProcessor
 
-from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
 
 
 def aggregate(json, type):
@@ -41,11 +41,35 @@ def predict(json, identifier):
         st_sc['wise_score'] = prediction
 
         # update database
-        databasemanager.update_step(settings.results_table_name, settings.results_wiseone_column_name,
-                                    st_sc.to_json(orient='index'), identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_wiseone_column_status, settings.completed,
-                                    identifier)
-        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        update_database(settings.results_table_name, settings.results_wiseone_column_name,
+                        settings.results_wiseone_column_status, st_sc.to_json(orient='index'), identifier)
+
+        # go next level
+        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
+        thread.start()
+    except Exception as e:
+        log_exception(e, identifier)
+
+def predict_rnn(json, identifier):
+    """
+
+    :param json:
+    :param identifier:
+    :return:
+    """
+    try:
+        # load trained model
+        model = torch.load(settings.rnn_model)
+
+        # parse the stance scores only and feed to model
+        df = pd.json_normalize(json['wise_check'])
+        scores = df # FIXME
+        # get prediction
+        prediction = model.test_model(torch.from_numpy(scores)).numpy()
+
+        # update database
+        update_database(settings.results_table_name, settings.results_wise_final_column_name,
+                        settings.results_wise_final_column_status, prediction, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))

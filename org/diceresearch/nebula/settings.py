@@ -1,6 +1,5 @@
 from dotenv import load_dotenv
 import os
-import logging
 
 # Load environment variables from .env file
 load_dotenv()
@@ -19,6 +18,10 @@ results_stancedetection_column_name = "STANCE_DETECTION_RESULT"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
 results_wiseone_column_name = "WISE_ONE_RESULT"
 results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
+results_wise_final_column_name = "WISE_FINAL_RESULT"
+results_wise_final_column_status = "WISE_FINAL_RESULT_STATUS"
+
+translator = "opus_mt"
 
 skipped = "SKIPPED"
 completed = "COMPLETED"
@@ -27,7 +30,7 @@ ongoing = "ONGOING"
 failed = "FAILED"
 error = "ERROR"
 error_msg = "ERROR_BODY"
-logging_config = './resources/logging_config.ini'
+logging_config = 'resources/logging_config.ini'
 
 timestamp = "CHECK_TIMESTAMP"
 status = "STATUS"
@@ -48,8 +51,10 @@ stancedetection_api = "http://localhost:8001/check/"
 run_evidence_retrival_bulk_or_single = "single"
 
 trained_model = "./resources/model_130723.pt"
+rnn_model = "./resources/model_rnn_041223.pt"
+
 # WISE model last trained date
-model_timestamp = "2023-07-13"
+model_timestamp = "2023-12-04"
 # Reference corpus last modified date
 knowledge_timestamp = "2023-05-31"
 

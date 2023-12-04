@@ -14,6 +14,9 @@ public class RESTController {
 
 	@Autowired
 	ApplicationContext ctx;
+	
+	@Autowired
+	CoreferenceResolution coref;
 
 	@GetMapping("/test")
 	public String ping() {
@@ -22,10 +25,7 @@ public class RESTController {
 
 	@GetMapping("/validate")
 	public String validate(@RequestParam(value = "text", required = true) String text) {
-
-		CoreferenceResolution coref = new CoreferenceResolution();
-		String output = coref.generateCrR(text);
-		return output;
+		return coref.generateCrR(text);
 	}
 
 }
