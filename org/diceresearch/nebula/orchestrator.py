@@ -29,6 +29,7 @@ def goNextLevel(identifier):
     CLAIM_CHECK_WORTHINESS_RESULT = current[6]
     EVIDENCE_RETRIEVAL_RESULT = current[8]
     STANCE_DETECTION_RESULT = current[10]
+    WISE_RESULT = current[12]
 
     # If the record could not be found
     if current is None:
@@ -108,9 +109,15 @@ def goNextLevel(identifier):
             thread = threading.Thread(target=predictions.predict, args=(tempjson, identifier))
             thread.start()
     elif next_stage == 6:
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
+        # Final WISE
+        if WISE_RESULT is None:
+            log_exception("The first wise result is null.", identifier)
+        else:
+            tempjson = json.loads(WISE_RESULT)
+            thread = threading.Thread(target=predictions.predict_rnn, args=(tempjson, identifier))
+            thread.start()
     elif next_stage == 7:
-        pass
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
     elif next_stage == 8:
         pass
     elif next_stage == 9:

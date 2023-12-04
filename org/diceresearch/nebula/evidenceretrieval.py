@@ -1,13 +1,12 @@
 import json
-import logging
 import threading
 from elasticsearch import Elasticsearch
 
-import databasemanager
 import orchestrator
 import settings
 from data.results import EvidenceRetrievalResult, QueryResult
-from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
+
+from utils.database_utils import update_database, log_exception
 
 
 def do_query(text):
@@ -56,11 +55,8 @@ def retrieve(input, identifier):
         tosave = er_result.get_json()
 
         # update database
-        databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrieval_column_name, tosave,
-                                    identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_evidenceretrieval_column_status,
-                                   settings.completed, identifier)
-        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        update_database(settings.results_evidenceretrieval_column_name,
+                        settings.results_evidenceretrieval_column_status, tosave, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))

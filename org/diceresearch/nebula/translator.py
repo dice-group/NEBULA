@@ -1,15 +1,15 @@
 import threading
 import httpmanager
 import settings
-import databasemanager
 import orchestrator
-from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
+
+from utils.database_utils import update_database, log_exception
 
 
 def send_translation_request(textToTranslate, identifier):
     try:
         data = {
-            "components": "mbart_mt",
+            "components": settings.translator,
             "query": "\""+textToTranslate+"\"",
             "lang": "de"
             }
@@ -20,12 +20,9 @@ def send_translation_request(textToTranslate, identifier):
         result = result.replace("\"","")
 
         # save the result in database
-        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, result,
-                                    identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
-                                    settings.completed, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name, result, identifier)
-        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        update_database(settings.results_translation_column_name,
+                        settings.results_translation_column_status, result, identifier)
+
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()

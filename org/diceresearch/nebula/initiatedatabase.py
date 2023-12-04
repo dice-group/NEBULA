@@ -22,6 +22,8 @@ try:
          {settings.results_stancedetection_column_status} TEXT,
          {settings.results_wiseone_column_name} TEXT,
          {settings.results_wiseone_column_status} TEXT,
+         {settings.results_wise_final_column_name} TEXT,
+         {settings.results_wise_final_column_status} TEXT,
          STATUS TEXT,
          VERSION TEXT,
          ERROR_BODY TEXT,

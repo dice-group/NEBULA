@@ -8,6 +8,7 @@ import databasemanager
 import httpmanager
 import orchestrator
 import settings
+from utils.database_utils import update_database, log_exception
 
 
 def check(text, identifier):
@@ -31,15 +32,11 @@ def check(text, identifier):
             results = results.sort_values('score', ascending=False).head(settings.claim_limit)
 
         # save in the database
-        databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_name,
-                                    results.to_json(orient='records'), identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_status,
-                                    settings.completed, identifier)
-        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        update_database(settings.results_claimworthiness_column_name, settings.results_claimworthiness_column_status,
+                        results.to_json(orient='records'), identifier)
+
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
-        logging.exception(e)
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        log_exception(e, identifier)

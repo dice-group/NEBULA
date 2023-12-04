@@ -2,13 +2,12 @@ import json
 import logging
 import threading
 
-import databasemanager
 import orchestrator
 import settings
 import nltk
 
-from data.results import StanceDetectionResult, Stance
-from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
+from data.results import StanceDetectionResult
+from utils.database_utils import log_exception, update_database
 
 nltk.download('punkt')
 nltk.download('stopwords')
@@ -81,8 +80,8 @@ def detect(main_text, claim, identifier):
         logging.error("Error in retrieving the evidences")
     else:
         # save the result in database
-        databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, result,
-                                    identifier)
+        update_database(settings.results_stancedetection_column_name,
+                        settings.results_stancedetection_column_status, result, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
@@ -113,12 +112,10 @@ def calculate(evidences, identifier):
             raise ValueError('No stance scores have been found.')
 
         tosave = sd_result.get_json()
+
         # update database
-        databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_name, tosave,
-                                    identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_stancedetection_column_status,
-                                    settings.completed, identifier)
-        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        update_database(settings.results_stancedetection_column_name,
+                        settings.results_stancedetection_column_status, tosave, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
