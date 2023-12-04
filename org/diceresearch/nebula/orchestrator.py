@@ -5,12 +5,13 @@ from datetime import datetime
 
 import claimworthinesschecker
 import claimworthinesscheckerdummy
+import coreference_resolution
 import databasemanager
 import evidenceretrieval
 import settings
 import stancedetection
 import translator
-from org.diceresearch.nebula.exception_handling.exception_utils import log_exception
+from utils.database_utils import log_exception
 from veracity_detection import predictions
 
 
@@ -26,10 +27,11 @@ def goNextLevel(identifier):
     INPUT_TEXT = current[2]
     INPUT_LANG = current[3]
     TRANSLATED_TEXT = current[4]
-    CLAIM_CHECK_WORTHINESS_RESULT = current[6]
-    EVIDENCE_RETRIEVAL_RESULT = current[8]
-    STANCE_DETECTION_RESULT = current[10]
-    WISE_RESULT = current[12]
+    COREF_TEXT = current[6]
+    CLAIM_CHECK_WORTHINESS_RESULT = current[8]
+    EVIDENCE_RETRIEVAL_RESULT = current[10]
+    STANCE_DETECTION_RESULT = current[12]
+    WISE_RESULT = current[14]
 
     # If the record could not be found
     if current is None:
@@ -65,16 +67,28 @@ def goNextLevel(identifier):
             goNextLevel(identifier)
 
     elif next_stage == 2:
+        logging.debug("Coreference resolution")
+
+        # no claims found
+        if TRANSLATED_TEXT is None:
+            log_exception("The translation response is null.", identifier)
+        else:
+            thread = threading.Thread(target=coreference_resolution.send_coref_request,
+                                      args=(TRANSLATED_TEXT, identifier))
+            thread.start()
+
+
+    elif next_stage == 3:
         logging.debug("Claim check")
 
         if settings.module_claimworthiness == "dummy":
-            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(TRANSLATED_TEXT, identifier))
+            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(COREF_TEXT, identifier))
             thread.start()
         else:
-            thread = threading.Thread(target=claimworthinesschecker.check, args=(TRANSLATED_TEXT, identifier))
+            thread = threading.Thread(target=claimworthinesschecker.check, args=(COREF_TEXT, identifier))
             thread.start()
 
-    elif next_stage == 3:
+    elif next_stage == 4:
         logging.debug("Evidence retrieval")
 
         # no claims found
@@ -85,7 +99,7 @@ def goNextLevel(identifier):
             thread = threading.Thread(target=evidenceretrieval.retrieve, args=(jsonCheckdClaimsForWorthiness, identifier))
             thread.start()
 
-    elif next_stage == 4:
+    elif next_stage == 5:
         logging.debug("Stance detection")
 
         # no evidence is found
@@ -98,7 +112,7 @@ def goNextLevel(identifier):
             thread = threading.Thread(target=stancedetection.calculate, args=(temp_evidences, identifier))
             thread.start()
 
-    elif next_stage == 5:
+    elif next_stage == 6:
         logging.debug('Query the trained model')
 
         # no stances found
@@ -108,7 +122,7 @@ def goNextLevel(identifier):
             tempjson = json.loads(STANCE_DETECTION_RESULT)
             thread = threading.Thread(target=predictions.predict, args=(tempjson, identifier))
             thread.start()
-    elif next_stage == 6:
+    elif next_stage == 7:
         # Final WISE
         if WISE_RESULT is None:
             log_exception("The first wise result is null.", identifier)
@@ -116,11 +130,11 @@ def goNextLevel(identifier):
             tempjson = json.loads(WISE_RESULT)
             thread = threading.Thread(target=predictions.predict_rnn, args=(tempjson, identifier))
             thread.start()
-    elif next_stage == 7:
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
     elif next_stage == 8:
-        pass
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
     elif next_stage == 9:
+        pass
+    elif next_stage == 10:
         pass
     else:
         pass
