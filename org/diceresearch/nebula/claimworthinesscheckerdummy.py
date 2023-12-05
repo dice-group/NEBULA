@@ -14,10 +14,11 @@ individual claims rather than large blocks of text."""
 def check(text, identifier):
     try:
         # create response with a single claim
-        dummy_response = Sentence(text, 0, 1).get_json(in_array=True)
+        # ID 0 and score 1
+        dummy_response = Sentence(0, text, 1).get_json(in_array=True)
 
         # save in the database
-        update_database(settings.results_claimworthiness_column_name,
+        update_database(settings.sentences,
                         settings.results_claimworthiness_column_status, dummy_response, identifier)
 
         # go next level

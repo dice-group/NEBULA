@@ -4,7 +4,7 @@ from elasticsearch import Elasticsearch
 
 import orchestrator
 import settings
-from data.results import EvidenceRetrievalResult, QueryResult
+from data.results import Evidence
 
 from utils.database_utils import update_database, log_exception
 
@@ -30,7 +30,7 @@ def do_query(text):
     # Execute the search query
     response = es.search(index=settings.elasticsearch_index_name, body=search_query)
 
-    return json.dumps(response.raw)
+    return response.raw
 
 
 def retrieve(input, identifier):
@@ -42,21 +42,25 @@ def retrieve(input, identifier):
     """
     try:
         # collect results
-        er_result = EvidenceRetrievalResult()
+
         for claim in input:
             text = claim["text"]
             result = do_query(text)
-            er_result.add(QueryResult(result, text))
+            hits = result['hits']['hits']
+            er_result = list()
+            for h in hits:
+                ev = h['_source']
+                evidence_text = ev['text']
+                evidence_url = ev['url']
+                evidence_score = h['_score']
+                er_result.append(Evidence(evidence_text, evidence_url, evidence_score).__dict__)
+            claim["evidences"] = er_result
 
-        # if no scores are found
-        if er_result.is_empty():
-            raise ValueError('No evidence has been found.')
-
-        tosave = er_result.get_json()
 
         # update database
-        update_database(settings.results_evidenceretrieval_column_name,
-                        settings.results_evidenceretrieval_column_status, tosave, identifier)
+        input_json = json.dumps(input)
+        update_database(settings.sentences,
+                        settings.results_evidenceretrieval_column_status, input_json, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))

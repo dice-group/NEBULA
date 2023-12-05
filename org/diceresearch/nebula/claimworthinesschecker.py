@@ -8,7 +8,8 @@ import databasemanager
 import httpmanager
 import orchestrator
 import settings
-from utils.database_utils import update_database, log_exception
+from data.results import Sentence
+from utils.database_utils import update_database, log_exception, update_database_json
 
 
 def check(text, identifier):
@@ -31,8 +32,12 @@ def check(text, identifier):
         if len(results) > settings.claim_limit:
             results = results.sort_values('score', ascending=False).head(settings.claim_limit)
 
+        # reorder columns
+        cols = ['index', 'text', 'score']
+        results = results[cols]
+
         # save in the database
-        update_database(settings.results_claimworthiness_column_name, settings.results_claimworthiness_column_status,
+        update_database_json(settings.sentences, settings.results_claimworthiness_column_status,
                         results.to_json(orient='records'), identifier)
 
         # go next level

@@ -21,28 +21,28 @@ def goNextLevel(identifier):
     :param identifier: ID
     :return:
     """
-    logging.info("Orch: {}".format(identifier))
     current = databasemanager.getOne(settings.results_table_name, identifier)
-    STAGE_NUMBER = current[1]
-    INPUT_TEXT = current[2]
-    INPUT_LANG = current[3]
-    TRANSLATED_TEXT = current[4]
-    COREF_TEXT = current[6]
-    CLAIM_CHECK_WORTHINESS_RESULT = current[8]
-    EVIDENCE_RETRIEVAL_RESULT = current[10]
-    STANCE_DETECTION_RESULT = current[12]
-    WISE_RESULT = current[14]
+
+    stage_number = current[1]
+    input_lang = current[2]
+    input_text = current[3]
+    translated_text = current[4]
+    coref_text = current[5]
+    sentences = current[14]
 
     # If the record could not be found
     if current is None:
-        logging.info("Could not find this row in database {}".format(identifier))
+        logging.error("Could not find this row in database {}".format(identifier))
 
+    if sentences:
+        claims = json.loads(sentences)
     # Increase fact checking step
-    current_stage = int(STAGE_NUMBER)
+    current_stage = int(stage_number)
     next_stage = current_stage + 1
     logging.info("Current stage is : {}".format(current_stage))
 
     if next_stage == 1:
+        logging.info("Orch: {}".format(identifier))
         logging.debug("Translation")
 
         # set status to ongoing and set timestamp
@@ -51,16 +51,16 @@ def goNextLevel(identifier):
                                     identifier)
 
         # translate if language differs from english and we were not provided a translation already
-        if INPUT_LANG != "en" and not TRANSLATED_TEXT:
+        if input_lang != "en" and not translated_text:
             # start the translation step
             logging.debug("Translation step")
-            thread = threading.Thread(target=translator.send_translation_request, args=(INPUT_TEXT, identifier))
+            thread = threading.Thread(target=translator.send_translation_request, args=(input_text, identifier))
             thread.start()
         else:
             # skip the stage
             logging.debug("Skipping translation")
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
-                                        INPUT_TEXT, identifier)
+                                        input_text, identifier)
             databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
                                         settings.skipped, identifier)
             databasemanager.increase_the_stage(settings.results_table_name, identifier)
@@ -70,68 +70,49 @@ def goNextLevel(identifier):
         logging.debug("Coreference resolution")
 
         # no claims found
-        if TRANSLATED_TEXT is None:
+        if translated_text is None:
             log_exception("The translation response is null.", identifier)
         else:
             thread = threading.Thread(target=coreference_resolution.send_coref_request,
-                                      args=(TRANSLATED_TEXT, identifier))
+                                      args=(translated_text, identifier))
             thread.start()
-
 
     elif next_stage == 3:
         logging.debug("Claim check")
 
         if settings.module_claimworthiness == "dummy":
-            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(COREF_TEXT, identifier))
+            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(coref_text, identifier))
             thread.start()
         else:
-            thread = threading.Thread(target=claimworthinesschecker.check, args=(COREF_TEXT, identifier))
+            thread = threading.Thread(target=claimworthinesschecker.check, args=(coref_text, identifier))
             thread.start()
 
     elif next_stage == 4:
         logging.debug("Evidence retrieval")
-
-        # no claims found
-        if CLAIM_CHECK_WORTHINESS_RESULT is None:
-            log_exception("The claims worthiness response is null.", identifier)
-        else:
-            jsonCheckdClaimsForWorthiness = json.loads(CLAIM_CHECK_WORTHINESS_RESULT)
-            thread = threading.Thread(target=evidenceretrieval.retrieve, args=(jsonCheckdClaimsForWorthiness, identifier))
-            thread.start()
+        thread = threading.Thread(target=evidenceretrieval.retrieve, args=(claims, identifier))
+        thread.start()
 
     elif next_stage == 5:
         logging.debug("Stance detection")
-
-        # no evidence is found
-        if EVIDENCE_RETRIEVAL_RESULT is None:
-            log_exception("The evidence retrieval result is null.", identifier)
-        else:
-            tempjson = json.loads(EVIDENCE_RETRIEVAL_RESULT)
-            temp_evidences = tempjson["evidences"]
-            logging.debug(EVIDENCE_RETRIEVAL_RESULT)
-            thread = threading.Thread(target=stancedetection.calculate, args=(temp_evidences, identifier))
-            thread.start()
+        thread = threading.Thread(target=stancedetection.calculate, args=(claims, identifier))
+        thread.start()
 
     elif next_stage == 6:
         logging.debug('Query the trained model')
+        thread = threading.Thread(target=predictions.predict, args=(claims, identifier))
+        thread.start()
 
-        # no stances found
-        if STANCE_DETECTION_RESULT is None:
-            log_exception("The stance detection result is null.", identifier)
-        else:
-            tempjson = json.loads(STANCE_DETECTION_RESULT)
-            thread = threading.Thread(target=predictions.predict, args=(tempjson, identifier))
-            thread.start()
     elif next_stage == 7:
         # Final WISE
-        if WISE_RESULT is None:
-            log_exception("The first wise result is null.", identifier)
-        else:
-            tempjson = json.loads(WISE_RESULT)
-            thread = threading.Thread(target=predictions.predict_rnn, args=(tempjson, identifier))
-            thread.start()
-    elif next_stage == 8:
+        # if WISE_RESULT is None:
+        #     log_exception("The first wise result is null.", identifier)
+        # else:
+        #     tempjson = json.loads(WISE_RESULT)
+        #     thread = threading.Thread(target=predictions.predict_rnn, args=(tempjson, identifier))
+        #     thread.start()
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
+    elif next_stage == 8:
+        pass
     elif next_stage == 9:
         pass
     elif next_stage == 10:
