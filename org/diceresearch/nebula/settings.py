@@ -21,6 +21,7 @@ results_wise_final_column_name = "WISE_FINAL_RESULT"
 results_wise_final_column_status = "WISE_FINAL_RESULT_STATUS"
 results_veracity_label = "VERACITY_LABEL"
 sentences = "SENTENCES"
+results_notificationtoken_column_name = "REGISTRATION_TOKEN"
 
 # Status literals
 skipped = "SKIPPED"
@@ -68,4 +69,6 @@ class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']
 # Reference corpus last modified date
 knowledge_timestamp = "2023-05-31"
 
+# firebase push notifications
+firebase_certificate = './resources/nebula-dev-c8f4a-firebase-adminsdk-acvxz-db4b4471d0.json'
 

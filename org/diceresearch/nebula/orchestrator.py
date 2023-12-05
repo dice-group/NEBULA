@@ -15,6 +15,8 @@ from utils import database_utils
 from utils.database_utils import log_exception
 from veracity_detection import predictions
 
+from utils import notification
+
 
 def goNextLevel(identifier):
     """
@@ -39,6 +41,12 @@ def goNextLevel(identifier):
         claims = json.loads(sentences)
     # Increase fact checking step
     current_stage = int(stage_number)
+
+    #notification
+    REGISTRATION_TOKEN = current[14]
+    NOTIFICATION_TITLE = "Your result is ready!"
+    NOTIFICATION_BODY = f"Your result with ID {identifier} is now available.",
+
     next_stage = current_stage + 1
     logging.info("Current stage is : {}".format(current_stage))
 
@@ -97,16 +105,22 @@ def goNextLevel(identifier):
         logging.debug('Query the trained model')
         thread = threading.Thread(target=predictions.predict, args=(claims, identifier))
         thread.start()
-
     elif next_stage == 7:
         logging.debug('Query the trained RNN model')
         thread = threading.Thread(target=predictions.predict_rnn, args=(claims, identifier))
         thread.start()
     elif next_stage == 8:
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
+        if REGISTRATION_TOKEN:
+            notification.send_firebase_notification(REGISTRATION_TOKEN, NOTIFICATION_TITLE, NOTIFICATION_BODY)
+            databasemanager.delete_from_column(settings.results_table_name,
+                                               settings.results_notificationtoken_column_name)
     elif next_stage == 9:
         pass
     elif next_stage == 10:
         pass
     else:
         pass
+
+
+

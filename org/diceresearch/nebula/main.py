@@ -71,6 +71,7 @@ def check():
     text = args.get('text')
     translated_text = args.get('translation')
     lang = args.get('lang')
+    registration_token = args.get('token')
 
     # Assign not defined if language is not specified
     if not lang:
@@ -86,6 +87,11 @@ def check():
 
     # Start pipeline
     id = start_pipeline(text, translated_text, lang)
+
+    # Update the registration token in the database
+    if registration_token:
+        databasemanager.update_step(settings.results_table_name, settings.results_notificationtoken_column_name,
+                                    registration_token, id)
 
     # return id to check later on
     return jsonify({'ID': id}), 200
@@ -134,6 +140,7 @@ def raw_status():
     # parse arguments
     if request.method == 'GET':
         args = request.args
+
     else:
         args = request.json
     id = args.get('id')
