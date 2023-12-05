@@ -13,16 +13,14 @@ results_translation_column_name = "TRANSLATED_TEXT"
 results_translation_column_status = "TRANSLATED_TEXT_STATUS"
 results_coref_column_name = "COREF_TEXT"
 results_coref_column_status = "COREF_TEXT_STATUS"
-results_claimworthiness_column_name = "CLAIM_CHECK_WORTHINESS_RESULT"
 results_claimworthiness_column_status = "CLAIM_CHECK_WORTHINESS_RESULT_STATUS"
-results_evidenceretrieval_column_name = "EVIDENCE_RETRIEVAL_RESULT"
 results_evidenceretrieval_column_status = "EVIDENCE_RETRIEVAL_RESULT_STATUS"
-results_stancedetection_column_name = "STANCE_DETECTION_RESULT"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
-results_wiseone_column_name = "WISE_ONE_RESULT"
 results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
 results_wise_final_column_name = "WISE_FINAL_RESULT"
 results_wise_final_column_status = "WISE_FINAL_RESULT_STATUS"
+results_veracity_label = "VERACITY_LABEL"
+sentences = "SENTENCES"
 
 # Status literals
 skipped = "SKIPPED"
@@ -43,7 +41,7 @@ translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 translator = "opus_mt"
 
 # Coreference resolution
-coref_endpoint = "http://nebulavm2-bullseye.cs.upb.de:9090/validate"
+coref_endpoint = "http://localhost:9090/validate"
 
 # claim check options
 module_claimworthiness = "claimbuster"

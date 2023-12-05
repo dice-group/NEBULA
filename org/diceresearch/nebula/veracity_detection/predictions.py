@@ -1,3 +1,4 @@
+import json
 import threading
 
 import numpy as np
@@ -16,10 +17,10 @@ def aggregate(json, type):
     return result
 
 
-def predict(json, identifier):
+def predict(claims, identifier):
     """
 
-    :param json:
+    :param claims:
     :param identifier:
     :return:
     """
@@ -28,27 +29,27 @@ def predict(json, identifier):
         model = torch.load(settings.trained_model)
 
         # parse the stance scores only and feed to model
-        df = pd.json_normalize(json['stances'])
+        # loads nested json, groups by claim index, and aggregates the stance scores in a list
+        df = pd.json_normalize(claims, 'evidences', ['index']).groupby('index')[['index', 'stance_score']]\
+            .agg({'index': 'first', 'stance_score': list})
+        claim_indices = df.index
+        stance_scores = np.vstack(df.stance_score.to_numpy()).astype(np.float32)
 
-        # FIXME this shouldn't be needed, it's already always 10. If it isn't, there's a problem
-        df2 = df.groupby(['claim']).apply(lambda x: x.nlargest(10, ['stance_score'])).reset_index(drop=True)
-        st_sc = df2.groupby(['claim'])[['stance_score']].agg({"stance_score": list})
-        scores = np.array([np.array(score[0], dtype=np.float32) for score in st_sc.values])
-
-        # get prediction
-        prediction = model.test_model(torch.from_numpy(scores)).numpy()
-
-        st_sc['wise_score'] = prediction
+        # get and set prediction
+        prediction = model.test_model(torch.from_numpy(stance_scores)).squeeze(1)
+        for i, _ in enumerate(claim_indices):
+            claims[i]['wise_score'] = prediction[i].item()
 
         # update database
-        update_database(settings.results_table_name, settings.results_wiseone_column_name,
-                        settings.results_wiseone_column_status, st_sc.to_json(orient='index'), identifier)
+        claims_json = json.dumps(claims)
+        update_database(settings.sentences, settings.results_wiseone_column_status, claims_json, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
         thread.start()
     except Exception as e:
         log_exception(e, identifier)
+
 
 def predict_rnn(json, identifier):
     """

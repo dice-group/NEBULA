@@ -6,7 +6,6 @@ import orchestrator
 import settings
 import nltk
 
-from data.results import StanceDetectionResult
 from utils.database_utils import log_exception, update_database
 
 nltk.download('punkt')
@@ -88,34 +87,37 @@ def detect(main_text, claim, identifier):
         thread.start()
 
 
-def calculate(evidences, identifier):
+def calculate(claims, identifier):
+    """
+    Calculates the cosine similarity between the evidence texts and the respective claim.
+    It also updates the result in the database.
+
+    :param claims:
+    :param identifier:
+    :return:
+    """
     try:
-        sd_result = StanceDetectionResult()
-        for evidence in evidences:
-            # skip if evidence is empty
-            if not evidence["result"]:
-                logging.warning("Evidence not found for query {}".format(evidence["query"]))
-                continue
+        # calculate score per evidence in a claim
+        for claim in claims:
+            claim_text = claim['text']
+            evidences = claim['evidences']
+            for evidence in evidences:
+                evidence_text = evidence['evidence_text']
 
-            # parse results
-            result = json.loads(evidence["result"])
-            claim = evidence["query"]  # the text which we search in our documents
-            for hit in result["hits"]["hits"]:
-                text = hit["_source"]["text"]
-                url = hit["_source"]["url"]
-                elastic_score = hit["_score"]
-                stance_score = do_query(text, claim)
-                sd_result.add(claim, text, url, elastic_score, float(stance_score))
+                # continue if text is empty
+                if not evidence_text:
+                    logging.warning("Evidence not found for claim {}".format(claim_text))
+                    continue
 
-        # if no scores are found
-        if sd_result.is_empty():
-            raise ValueError('No stance scores have been found.')
+                # compute score between claim and evidence text
+                stance_score = do_query(evidence_text, claim_text)
+                evidence['stance_score'] = stance_score
 
-        tosave = sd_result.get_json()
+        # parse to json
+        claims_json = json.dumps(claims)
 
         # update database
-        update_database(settings.results_stancedetection_column_name,
-                        settings.results_stancedetection_column_status, tosave, identifier)
+        update_database(settings.sentences, settings.results_stancedetection_column_status, claims_json, identifier)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
