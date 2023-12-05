@@ -65,6 +65,7 @@ model_timestamp = "2023-12-04"  # WISE model last trained date
 low_threshold = 0.66  # Thresholds to be used in case of regression model
 high_threshold = 0.69
 class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']
+false_label = 'REFUTED'
 
 # Reference corpus last modified date
 knowledge_timestamp = "2023-05-31"

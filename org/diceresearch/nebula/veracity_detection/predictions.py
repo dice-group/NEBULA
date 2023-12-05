@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 
+import databasemanager
 import settings, orchestrator
 from utils.database_utils import update_database, log_exception
 from veracity_detection.aggregation import AggregationProcessor
@@ -71,6 +72,11 @@ def predict_rnn(json, identifier):
         # update database
         update_database(settings.results_table_name, settings.results_wise_final_column_name,
                         settings.results_wise_final_column_status, prediction, identifier)
+
+        # get label
+        veracity_label = ''
+        databasemanager.update_step(settings.results_table_name, settings.results_veracity_label,
+                                    veracity_label, id)
 
         # go next level
         thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))

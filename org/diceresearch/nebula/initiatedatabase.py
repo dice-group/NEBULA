@@ -31,7 +31,8 @@ def create_database_if_not_exists():
                  VERSION TEXT,
                  ERROR_BODY TEXT,
                  CHECK_TIMESTAMP DATETIME,
-                 VERACITY_LABEL TEXT
+                 VERACITY_LABEL TEXT,
+                 INDICATOR_CHECK TEXT
                  );""")
     except sqlite3.Error as error:
         logging.error("Failed to read data from sqlite table", error)

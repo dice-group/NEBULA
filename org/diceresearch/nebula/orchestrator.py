@@ -11,8 +11,7 @@ import evidenceretrieval
 import settings
 import stancedetection
 import translator
-from utils import database_utils
-from utils.database_utils import log_exception
+from indicators.main import run_indicator_check_text
 from veracity_detection import predictions
 
 from utils import notification
@@ -32,6 +31,7 @@ def goNextLevel(identifier):
     translated_text = current[4]
     coref_text = current[5]
     sentences = current[14]
+    veracity_label = current[20]
 
     # If the record could not be found
     if current is None:
@@ -42,7 +42,7 @@ def goNextLevel(identifier):
     # Increase fact checking step
     current_stage = int(stage_number)
 
-    #notification
+    # notification
     REGISTRATION_TOKEN = current[14]
     NOTIFICATION_TITLE = "Your result is ready!"
     NOTIFICATION_BODY = f"Your result with ID {identifier} is now available.",
@@ -105,18 +105,36 @@ def goNextLevel(identifier):
         logging.debug('Query the trained model')
         thread = threading.Thread(target=predictions.predict, args=(claims, identifier))
         thread.start()
+
     elif next_stage == 7:
         logging.debug('Query the trained RNN model')
         thread = threading.Thread(target=predictions.predict_rnn, args=(claims, identifier))
         thread.start()
+
     elif next_stage == 8:
+        # run indicators if label is false
+        if veracity_label == settings.false_label:
+            indicators = run_indicator_check_text(input_text)
+            status = settings.completed
+            databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
+                                        indicators, identifier)
+        else:
+            # otherwise show skipped status
+            status = settings.skipped
+
+        # update and increase the step
+        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
+                                    status, identifier)
+        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        goNextLevel(identifier)
+
+    elif next_stage == 9:
+        # set status as done and send push notification to device token if existing
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
         if REGISTRATION_TOKEN:
             notification.send_firebase_notification(REGISTRATION_TOKEN, NOTIFICATION_TITLE, NOTIFICATION_BODY)
             databasemanager.delete_from_column(settings.results_table_name,
                                                settings.results_notificationtoken_column_name)
-    elif next_stage == 9:
-        pass
     elif next_stage == 10:
         pass
     else:
