@@ -22,6 +22,8 @@ results_wise_final_column_status = "WISE_FINAL_RESULT_STATUS"
 results_veracity_label = "VERACITY_LABEL"
 sentences = "SENTENCES"
 results_notificationtoken_column_name = "REGISTRATION_TOKEN"
+results_indicator_check = "INDICATOR_CHECK"
+results_indicator_check_status = "INDICATOR_CHECK_STATUS"
 
 # Status literals
 skipped = "SKIPPED"
