@@ -19,6 +19,7 @@ results_stancedetection_column_name = "STANCE_DETECTION_RESULT"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
 results_wiseone_column_name = "WISE_ONE_RESULT"
 results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
+results_notificationtoken_column_name = "REGISTRATION_TOKEN"
 
 completed = "COMPLETED"
 done = "DONE"
@@ -56,3 +57,6 @@ knowledge_timestamp = "2023-05-31"
 low_threshold= 0.66
 high_threshold= 0.69
 class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']
+
+# firebase push notifications
+firebase_certificate = './resources/nebula-dev-c8f4a-firebase-adminsdk-acvxz-db4b4471d0.json'
