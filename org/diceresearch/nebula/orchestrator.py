@@ -11,6 +11,7 @@ import evidenceretrieval
 import settings
 import stancedetection
 import translator
+from utils import database_utils
 from utils.database_utils import log_exception
 from veracity_detection import predictions
 
@@ -68,14 +69,9 @@ def goNextLevel(identifier):
 
     elif next_stage == 2:
         logging.debug("Coreference resolution")
-
-        # no claims found
-        if translated_text is None:
-            log_exception("The translation response is null.", identifier)
-        else:
-            thread = threading.Thread(target=coreference_resolution.send_coref_request,
-                                      args=(translated_text, identifier))
-            thread.start()
+        thread = threading.Thread(target=coreference_resolution.send_coref_request,
+                                  args=(translated_text, identifier))
+        thread.start()
 
     elif next_stage == 3:
         logging.debug("Claim check")
@@ -103,16 +99,11 @@ def goNextLevel(identifier):
         thread.start()
 
     elif next_stage == 7:
-        # Final WISE
-        # if WISE_RESULT is None:
-        #     log_exception("The first wise result is null.", identifier)
-        # else:
-        #     tempjson = json.loads(WISE_RESULT)
-        #     thread = threading.Thread(target=predictions.predict_rnn, args=(tempjson, identifier))
-        #     thread.start()
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
+        logging.debug('Query the trained RNN model')
+        thread = threading.Thread(target=predictions.predict_rnn, args=(claims, identifier))
+        thread.start()
     elif next_stage == 8:
-        pass
+        databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
     elif next_stage == 9:
         pass
     elif next_stage == 10:

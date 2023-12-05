@@ -1,4 +1,5 @@
 import json
+import logging
 import threading
 from elasticsearch import Elasticsearch
 
@@ -42,9 +43,14 @@ def retrieve(input, identifier):
     """
     try:
         # collect results
-
         for claim in input:
             text = claim["text"]
+
+            # check validity of claim
+            if not text:
+                logging.warning('Encountered an invalid claim')
+                continue
+
             result = do_query(text)
             hits = result['hits']['hits']
             er_result = list()

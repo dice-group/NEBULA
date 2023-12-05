@@ -1,7 +1,7 @@
 import json
 
 """
-    This file contains all the result formats the service components output.
+    This file contains the result formats the service components output.
 """
 
 
@@ -106,44 +106,3 @@ class ResponseStatus(Result):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             self.__dict__[key] = value
-
-
-class RawStatus:
-    """
-
-    """
-    def __init__(self, input_text, lang, translated_text, coref_text, request_status,
-                 translation_status, coref_status, claim_check_status, evidence_retrieval_status,
-                 stance_detection_status, wise_one_status, wise_two_status,
-                 sentences, wise_score, veracity_label):
-        self.input_text = input_text
-        self.lang = lang
-        self.translated_text = translated_text
-        self.coref_text = coref_text
-        self.request_status = request_status
-        self.translation_status = translation_status
-        self.coref_status = coref_status
-        self.claim_check_status = claim_check_status
-        self.evidence_retrieval_status = evidence_retrieval_status
-        self.stance_detection_status = stance_detection_status
-        self.wise_one_status = wise_one_status
-        self.wise_two_status = wise_two_status
-        self.sentences = [Sentence(**s) for s in sentences]
-        self.wise_score = wise_score
-        self.veracity_label = veracity_label
-#  my_object = RawStatus(**data)  transforms a json into the object
-
-class Status(Result):
-    """
-        Response status for the /status query
-    """
-
-    def __init__(self, id, status, text, lang, veracity_label, veracity_score, explanation, provenance: Provenance):
-        self.id = id
-        self.status = status
-        self.lang = lang
-        self.text = text
-        self.veracity_label = veracity_label
-        self.veracity_score = veracity_score
-        self.explanation = explanation
-        self.provenance = provenance
