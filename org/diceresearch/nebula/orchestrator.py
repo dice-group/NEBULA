@@ -116,14 +116,14 @@ def goNextLevel(identifier):
         if veracity_label == settings.false_label:
             indicators = run_indicator_check_text(input_text)
             status = settings.completed
-            databasemanager.update_step(settings.results_table_name, settings.results_translation_column_name,
+            databasemanager.update_step(settings.results_table_name, settings.results_indicator_check,
                                         indicators, identifier)
         else:
             # otherwise show skipped status
             status = settings.skipped
 
         # update and increase the step
-        databasemanager.update_step(settings.results_table_name, settings.results_translation_column_status,
+        databasemanager.update_step(settings.results_table_name, settings.results_indicator_check_status,
                                     status, identifier)
         databasemanager.increase_the_stage(settings.results_table_name, identifier)
         goNextLevel(identifier)
