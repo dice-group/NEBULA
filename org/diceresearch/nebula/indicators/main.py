@@ -85,6 +85,13 @@ def run_indicator_check(json_input: Any):
 
     return json_output
 
+def run_indicator_check_text(input_text: Any):
+    config = load_config()
+    layout_and_formal_results = _run_layout_and_formal_checks(
+        input_text=input_text, config=config
+    )
+    return layout_and_formal_results
+
 
 if __name__ == "__main__":
     TEST_FILE_PATH = "./testfiles/testfile.json"
