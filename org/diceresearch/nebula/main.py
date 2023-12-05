@@ -8,7 +8,7 @@ import orchestrator
 from flask import Flask, request, Response, jsonify
 
 import settings
-from data.results import ResponseStatus
+from data.results import ResponseStatus, Provenance
 from utils.util import trim
 
 app = Flask(__name__)
@@ -137,9 +137,10 @@ def status():
     if not result:
         return jsonify({'Error': 'No record found with id {}'.format(id)}), 400
 
-    # pretty print the result json
+    # pretty print the result json and add provenance from settings
     first, = result
     j_obj = json.loads(first)
+    j_obj['Provenance'] = Provenance(settings.knowledge_timestamp, settings.model_timestamp).__dict__
     j_obj = json.dumps(j_obj, indent=3)
     return Response(j_obj, status=200, mimetype='application/json')
 
@@ -169,9 +170,10 @@ def raw_status():
     if not result:
         return jsonify({'Error': 'No record found with id {}'.format(id)}), 400
 
-    # pretty print the result json
+    # pretty print the result json and add provenance from settings
     first, = result
     j_obj = json.loads(first)
+    j_obj['provenance'] = Provenance(settings.knowledge_timestamp, settings.model_timestamp).__dict__
     j_obj = json.dumps(j_obj, indent=3)
     return Response(j_obj, status=200, mimetype='application/json')
 
@@ -202,4 +204,4 @@ def textsearch():
 
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(host='0.0.0.0', port=8080)
