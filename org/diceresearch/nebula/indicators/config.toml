@@ -1,0 +1,53 @@
+[layout_and_formal]
+enable_capitalization = true
+enable_emojis = true
+enable_hashtags = false
+
+[layout_and_formal.capitalization]
+display_message_warning = """
+Excessive capitalisation attracts attention. This might be used for emotional manipulation."""
+
+[layout_and_formal.emojis]
+angry_emojis = ["😤", "😠", "😡", "🤬", "👿"]
+total_emojis.enabled = true
+total_emojis.count_threshold = 3
+consecutive_emojis.enabled = true
+consecutive_emojis.count_threshold = 3
+display_message_warning = """
+The excessive use of emojis can be used by fake news outlets and sources to evoke negative emotions in and manipulate \
+the reader. Serious outlets are not known to use them and thus you should exercise caution by checking against \
+reputable and trustworthy sources."""
+
+[layout_and_formal.hashtags]
+hashtag_count_threshold = 5
+display_message_warning = """
+The excessive use of hashtags can be used by fake news outlets and sources to manipulate search results and \
+trending topics by connecting a topic to unrelated, possibly more popular, topics. \
+Serious outlets are not known to do this and thus you should exercise \
+caution by checking against "reputable and trustworthy sources."""
+
+[layout_and_formal.grammar]
+languagetool.lang = 'de-DE'
+languagetool.cache = 1000 # TODO integrate setting
+languagetool.pipeline_caching = true # TODO integrate setting
+languagetool.enable_spellchecking = false  # Deaktivieren der Rechtschreibprüfung (Damit nicht doppelt geprüft wird)
+display_message_warning = """
+Grammatical errors were identified. Since official news sources generally pay attention to correct \
+use of grammar, this might indicate unverified information."""
+
+[layout_and_formal.spelling]
+spellchecker.lang = 'de'
+display_message_warning = """
+Spelling errors were identified. Since official and trustworthy news sources generally pay attention to correct \
+spelling, this might indicate unverified information."""
+
+[layout_and_formal.punctuation]
+excessive_punctuation_pattern = 'r"[?!.]{2,}"'
+display_message_warning = """
+Excessive punctuation attracts attention. This might be used for emotional manipulation."""
+
+[topical.hate_speech]
+
+display_message_warning = """
+An algorithm has classified this statement as hate speech. \
+Hate speech is highly negative and might be used for emotional manipulation."""
