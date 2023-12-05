@@ -87,14 +87,12 @@ class Provenance(object):
     """
         Provenance information
     """
-    def __init__(self, check_timestamp, knowledge_date, model_date):
+    def __init__(self, knowledge_date, model_date):
         """
         Constructor.
-        :param check_timestamp: Start timestamp of the request
         :param knowledge_date: Knowledge base last modified date
         :param model_date: WISE models last trained date
         """
-        self.check_timestamp = check_timestamp
         self.knowledge_date = knowledge_date
         self.model_date = model_date
 
