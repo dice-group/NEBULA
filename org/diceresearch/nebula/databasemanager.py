@@ -149,7 +149,9 @@ def get_raw_status_as_json(identifier):
             cursor.execute(f"""
                     SELECT json_object(
                         'request_id', IDENTIFIER,
+                        'request_timestamp', CHECK_TIMESTAMP,
                         'request_status', STATUS,
+                        'error', ERROR_BODY,
                         'stage_number', STAGE_NUMBER,
                         'input_language', {settings.results_inputlang_column_name},
                         'input_text', {settings.results_inputtext_column_name},
@@ -186,7 +188,7 @@ def get_status_as_json(identifier):
                         'request_status', STATUS,
                         'stage_number', STAGE_NUMBER,
                         'input_text', {settings.results_inputtext_column_name},
-                        'veracity_label', {settings.results_veracity_label},
+                        'veracity_label', {settings.results_veracity_label}
                         ) AS json_data
                         FROM {settings.results_table_name} 
                         WHERE IDENTIFIER = "{identifier}" ; 

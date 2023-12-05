@@ -26,8 +26,8 @@ try:
          {settings.results_wise_final_column_name} TEXT,
          VERSION TEXT,
          ERROR_BODY TEXT,
-         CHECK_TIMESTAMP DATETIME
-         VERACITY_LABEL TEXT,
+         CHECK_TIMESTAMP DATETIME,
+         VERACITY_LABEL TEXT
          );""")
     print("Table created successfully")
 except sqlite3.Error as error:
