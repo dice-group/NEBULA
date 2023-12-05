@@ -14,6 +14,11 @@ def send_coref_request(text, identifier):
     :return: Coreferenced input text
     """
     try:
+
+        # input check
+        if not text:
+            raise ValueError('The coreference input is empty')
+
         # send request
         data = {"text": text}
         result = httpmanager.send_post(settings.coref_endpoint, data, None)

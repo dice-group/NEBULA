@@ -13,6 +13,10 @@ individual claims rather than large blocks of text."""
 
 def check(text, identifier):
     try:
+        # input check
+        if not text:
+            raise ValueError('The claim-check input is empty')
+
         # create response with a single claim
         # ID 0 and score 1
         dummy_response = Sentence(0, text, 1).get_json(in_array=True)

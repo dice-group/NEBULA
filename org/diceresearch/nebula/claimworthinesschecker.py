@@ -1,19 +1,20 @@
 import json
-import logging
 import threading
 
 import pandas as pd
 
-import databasemanager
 import httpmanager
 import orchestrator
 import settings
-from data.results import Sentence
-from utils.database_utils import update_database, log_exception, update_database_json
+from utils.database_utils import log_exception, update_database_json
 
 
 def check(text, identifier):
     try:
+        # input check
+        if not text:
+            raise ValueError('The claim check input is empty')
+
         # /api/v2/score/text/sentences/<input_text>
         api_key = settings.claimbuster_apikey
         input_claim = text

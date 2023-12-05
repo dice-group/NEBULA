@@ -106,7 +106,7 @@ def calculate(claims, identifier):
 
                 # continue if text is empty
                 if not evidence_text:
-                    logging.warning("Evidence not found for claim {}".format(claim_text))
+                    logging.warning("Skipping. Evidence not found for claim {}".format(claim_text))
                     continue
 
                 # compute score between claim and evidence text
