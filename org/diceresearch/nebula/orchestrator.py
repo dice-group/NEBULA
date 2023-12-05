@@ -30,7 +30,7 @@ def goNextLevel(identifier):
     #notification
     REGISTRATION_TOKEN = current[14]
     NOTIFICATION_TITLE = "Your result is ready!"
-    NOTIFICATION_BODY = "Your result is now available.",
+    NOTIFICATION_BODY = f"Your result with ID {identifier} is now available.",
 
     if current == None:
         logging.info("Could not find this row in database " + identifier)
@@ -128,9 +128,11 @@ def goNextLevel(identifier):
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
         if REGISTRATION_TOKEN:
             notification.send_firebase_notification(REGISTRATION_TOKEN, NOTIFICATION_TITLE, NOTIFICATION_BODY)
+            databasemanager.delete_from_column(settings.results_table_name,
+                                               settings.results_notificationtoken_column_name)
 
     elif next_stage == 7:
-        databasemanager.delete_from_column(settings.results_table_name, settings.results_notificationtoken_column_name)
+        pass
     elif next_stage == 8:
         pass
     elif next_stage == 9:

@@ -57,3 +57,6 @@ knowledge_timestamp = "2023-05-31"
 low_threshold= 0.66
 high_threshold= 0.69
 class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']
+
+# firebase push notifications
+firebase_certificate = './resources/nebula-dev-c8f4a-firebase-adminsdk-acvxz-db4b4471d0.json'
