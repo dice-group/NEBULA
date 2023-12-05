@@ -1,9 +1,13 @@
+import logging
+
 import firebase_admin
 from firebase_admin import credentials, messaging
 
 
 # Initialize Firebase
-cred = credentials.Certificate('../resources/nebula-dev-c8f4a-firebase-adminsdk-acvxz-db4b4471d0.json')
+import settings
+
+cred = credentials.Certificate(settings.firebase_certificate)
 firebase_admin.initialize_app(cred)
 
 def send_firebase_notification(registration_token, title, body):
@@ -30,10 +34,10 @@ def send_firebase_notification(registration_token, title, body):
 
         # Send the message
         response = messaging.send(message)
-        print('Message sent successfully:', response)
+        logging.info('Message sent successfully:', response)
         return True
     except Exception as e:
-        print('Error sending message:', str(e))
+        logging.error('Error sending message:', str(e))
         return False
 
 
