@@ -198,3 +198,22 @@ def get_status_as_json(identifier):
     except sqlite3.Error as error:
         logging.error("Failed to read data from sqlite table", error)
     return result
+
+
+def delete_from_column(which_table, which_column):
+    try:
+        conn = sqlite3.connect(settings.database_name)
+        cursor = conn.cursor()
+        # Build and execute the SQL query to delete values in the specified column
+        cursor.execute(f"UPDATE {which_table} SET {which_column}=NULL")
+        conn.commit()
+        logging.info("Record Deleted successfully ")
+        cursor.close()
+
+    except sqlite3.Error as error:
+        logging.error("Failed to read data from sqlite table", error)
+    finally:
+        if conn:
+            conn.close()
+            logging.info("The SQLite connection is closed")
+
