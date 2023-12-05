@@ -1,0 +1,5 @@
+"""
+Satire and Sarcasm
+"""
+
+# TODO
