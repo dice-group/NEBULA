@@ -93,3 +93,27 @@ def predict_rnn(json, identifier):
         thread.start()
     except Exception as e:
         log_exception(e, identifier)
+
+
+def predict_mean(json, identifier):
+    try:
+        # parse the stance scores only and feed to model
+        scores = pd.json_normalize(json)['wise_score'].to_numpy(dtype=np.float32)
+        prediction = aggregate(scores, 'mean')
+
+
+        # update database
+        update_database(settings.results_wise_final_column_name, settings.results_wise_final_column_status,
+                        str(prediction), identifier)
+
+        # translate score to label and save it
+        veracity_label = translate_to_classes(prediction, settings.low_threshold, settings.high_threshold,
+                                              settings.final_class_labels)
+        databasemanager.update_step(settings.results_table_name, settings.results_veracity_label,
+                                    veracity_label, identifier)
+
+        # go next level
+        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
+        thread.start()
+    except Exception as e:
+        log_exception(e, identifier)

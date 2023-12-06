@@ -11,7 +11,7 @@ from indicators.layout_and_formal import *
 # ToDo Save Json
 
 
-CONFIG_PATH: str = "./config.toml"
+CONFIG_PATH: str = "indicators/config.toml"
 
 
 def load_config() -> tomlkit.TOMLDocument:

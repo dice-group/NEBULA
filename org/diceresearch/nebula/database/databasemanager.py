@@ -143,6 +143,12 @@ def select_basedon_text(text):
 
 
 def get_raw_status_as_json(identifier):
+    """
+    Retrieves all the status of the individual components and its results
+
+    :param identifier:
+    :return:
+    """
     try:
         with sqlite3.connect(settings.database_name) as conn:
             cursor = conn.cursor()
@@ -167,7 +173,7 @@ def get_raw_status_as_json(identifier):
                         'indicator_check_status', {settings.results_indicator_check_status},
                         'wise_rnn_score', {settings.results_wise_final_column_name},
                         'veracity_label', {settings.results_veracity_label},
-                        'indicator_check', {settings.results_indicator_check},
+                        'indicator_check', json({settings.results_indicator_check}),
                         'sentences', json(SENTENCES)
                         ) AS json_data
                         FROM {settings.results_table_name} 
@@ -181,6 +187,11 @@ def get_raw_status_as_json(identifier):
 
 
 def get_status_as_json(identifier):
+    """
+    Retrieves the a summary of the results
+    :param identifier:
+    :return:
+    """
     try:
         with sqlite3.connect(settings.database_name) as conn:
             cursor = conn.cursor()
@@ -191,7 +202,7 @@ def get_status_as_json(identifier):
                         'stage_number', STAGE_NUMBER,
                         'input_text', {settings.results_inputtext_column_name},
                         'veracity_label', {settings.results_veracity_label},
-                        'indicator_check', {settings.results_indicator_check}
+                        'indicator_check', json({settings.results_indicator_check})
                         ) AS json_data
                         FROM {settings.results_table_name} 
                         WHERE IDENTIFIER = "{identifier}" ; 
