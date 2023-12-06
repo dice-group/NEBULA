@@ -164,8 +164,10 @@ def get_raw_status_as_json(identifier):
                         'stance_detection_status', {settings.results_stancedetection_column_status},
                         'wise_one_status', {settings.results_wiseone_column_status},
                         'wise_rnn_status', {settings.results_wise_final_column_status},
+                        'indicator_check_status', {settings.results_indicator_check_status},
                         'wise_rnn_score', {settings.results_wise_final_column_name},
                         'veracity_label', {settings.results_veracity_label},
+                        'indicator_check', {settings.results_indicator_check},
                         'sentences', json(SENTENCES)
                         ) AS json_data
                         FROM {settings.results_table_name} 
@@ -188,7 +190,8 @@ def get_status_as_json(identifier):
                         'request_status', STATUS,
                         'stage_number', STAGE_NUMBER,
                         'input_text', {settings.results_inputtext_column_name},
-                        'veracity_label', {settings.results_veracity_label}
+                        'veracity_label', {settings.results_veracity_label},
+                        'indicator_check', {settings.results_indicator_check}
                         ) AS json_data
                         FROM {settings.results_table_name} 
                         WHERE IDENTIFIER = "{identifier}" ; 
