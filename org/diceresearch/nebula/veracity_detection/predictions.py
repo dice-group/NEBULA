@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-import databasemanager
+from database import databasemanager
 import settings, orchestrator
 from utils.database_utils import update_database, log_exception
 from veracity_detection.aggregation import AggregationProcessor

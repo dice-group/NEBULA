@@ -1,6 +1,6 @@
 import logging
 
-import databasemanager
+from database import databasemanager
 import settings
 
 

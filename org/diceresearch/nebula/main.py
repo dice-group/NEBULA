@@ -3,13 +3,13 @@ import threading
 import uuid
 from logging.config import fileConfig
 
-import databasemanager
+from database import databasemanager
 import orchestrator
 from flask import Flask, request, Response, jsonify
 
 import settings
 from data.results import ResponseStatus, Provenance
-from initiatedatabase import create_database_if_not_exists
+from database.initiatedatabase import create_database_if_not_exists
 from utils.util import trim
 
 app = Flask(__name__)

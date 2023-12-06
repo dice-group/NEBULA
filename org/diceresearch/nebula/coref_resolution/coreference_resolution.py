@@ -1,6 +1,6 @@
 import threading
 
-import httpmanager
+from database import httpmanager
 import orchestrator
 import settings
 from utils.database_utils import update_database, log_exception

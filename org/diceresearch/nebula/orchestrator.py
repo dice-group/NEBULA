@@ -3,14 +3,13 @@ import logging
 import threading
 from datetime import datetime
 
-import claimworthinesschecker
-import claimworthinesscheckerdummy
-import coreference_resolution
-import databasemanager
-import evidenceretrieval
+from claim_worthiness_check import claimworthinesscheckerdummy, claimworthinesschecker
+from coref_resolution import coreference_resolution
+from database import databasemanager
+from evidence_retrieval import evidenceretrieval
 import settings
-import stancedetection
-import translator
+from stance_detection import stancedetection
+from translation import translator
 from indicators.main import run_indicator_check_text
 from veracity_detection import predictions
 

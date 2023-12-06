@@ -4,7 +4,7 @@ import random
 from logging.config import fileConfig
 
 import torch
-from imblearn.over_sampling import SMOTE, RandomOverSampler
+from imblearn.over_sampling import RandomOverSampler
 from sklearn.model_selection import KFold
 from torch.utils.data import SubsetRandomSampler
 
@@ -12,7 +12,7 @@ import settings
 from data.dataset import StanceDataset
 from utils.util import read_jsonl_from_file, translate_to_classes
 from veracity_detection.model import MLP
-from veracity_detection.run_train import load_scores, get_regression_metrics, calculate_metrics, translate
+from tools.run_train import load_scores, get_regression_metrics, calculate_metrics, translate
 
 
 def parse_args():
