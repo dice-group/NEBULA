@@ -12,9 +12,8 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 import settings
 from data.dataset import StanceDataset
 from sklearn.preprocessing import MinMaxScaler
-from utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes, get_highest_index, \
-    translate_to_classes1
-from veracity_detection.model import MLP, FocalLoss
+from utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes
+from veracity_detection.model import MLP
 from sklearn.metrics import confusion_matrix, classification_report
 
 """
@@ -81,7 +80,7 @@ def main():
     logging.info(model)
 
     # train
-    _ = model.train_model(loss_function=torch.nn.MSELoss,
+    model.train_model(loss_function=torch.nn.MSELoss,
                                         optimizer=torch.optim.Adam,
                                         training_loader=train_loader,
                                         validation_loader=val_loader,
@@ -112,8 +111,7 @@ def main():
     true_labels, predicted_labels, best_thresholds = get_regression_metrics(true_labels, predicted_scores, class_labels, (-1, 1))
 
     # calculate metrics for best thresholds
-    metrics = calculate_metrics(true_labels, predicted_labels, class_labels)
-    logging.info(metrics)
+    calculate_metrics(true_labels, predicted_labels, class_labels)
 
 
 def get_regression_metrics(true_labels, predicted_scores, class_labels, regression_range):
@@ -129,7 +127,7 @@ def get_regression_metrics(true_labels, predicted_scores, class_labels, regressi
                                              classes=class_labels, scores=predicted_scores, true_labels=true_labels)
 
     # Print the best thresholds and F1 score
-    predicted_labels = [translate_to_classes1(score, best_thresholds, class_labels)
+    predicted_labels = [translate_to_classes(score, best_thresholds, class_labels)
                         for score in predicted_scores]
 
     frequency_count = Counter(predicted_labels)
@@ -148,41 +146,36 @@ def calculate_metrics(true_labels, predicted_labels, class_labels):
     f1 = f1_score(true_labels, predicted_labels, average='weighted', labels=class_labels)
     precision = precision_score(true_labels, predicted_labels, average='weighted', labels=class_labels)
     recall = recall_score(true_labels, predicted_labels, average='weighted', labels=class_labels)
-    # logging.info('Weighted Precision Score: {}'.format(precision))
-    # logging.info('Weighted Recall Score: {}'.format(recall))
-    # logging.info('Weighted F1 Score: {}'.format(f1))
+    logging.info('Weighted Precision Score: {}'.format(precision))
+    logging.info('Weighted Recall Score: {}'.format(recall))
+    logging.info('Weighted F1 Score: {}'.format(f1))
 
     # Compute macro metrics
     f1_m = f1_score(true_labels, predicted_labels, average='macro', labels=class_labels)
     precision_m = precision_score(true_labels, predicted_labels, average='macro', labels=class_labels)
     recall_m = recall_score(true_labels, predicted_labels, average='macro', labels=class_labels)
-    # logging.info('Macro Precision Score: {}'.format(precision_m))
-    # logging.info('Macro Recall Score: {}'.format(recall_m))
-    # logging.info('Macro F1 Score: {}'.format(f1_m))
+    logging.info('Macro Precision Score: {}'.format(precision_m))
+    logging.info('Macro Recall Score: {}'.format(recall_m))
+    logging.info('Macro F1 Score: {}'.format(f1_m))
 
     # Compute micro metrics
     f1_mi = f1_score(true_labels, predicted_labels, average='micro', labels=class_labels)
     precision_mi = precision_score(true_labels, predicted_labels, average='micro', labels=class_labels)
     recall_mi = recall_score(true_labels, predicted_labels, average='micro', labels=class_labels)
-    # logging.info('Micro Precision Score: {}'.format(precision_mi))
-    # logging.info('Micro Recall Score: {}'.format(recall_mi))
-    # logging.info('Micro F1 Score: {}'.format(f1_mi))
+    logging.info('Micro Precision Score: {}'.format(precision_mi))
+    logging.info('Micro Recall Score: {}'.format(recall_mi))
+    logging.info('Micro F1 Score: {}'.format(f1_mi))
 
     # Compute metrics per label
     f1_n = f1_score(true_labels, predicted_labels, average=None, labels=class_labels)
     precision_n = precision_score(true_labels, predicted_labels, average=None, labels=class_labels)
     recall_n = recall_score(true_labels, predicted_labels, average=None, labels=class_labels)
-    # logging.info('Precision Score: {}'.format(precision_n))
-    # logging.info('Recall Score: {}'.format(recall_n))
-    # logging.info('F1 Score: {}'.format(f1_n))
+    logging.info('Precision Score: {}'.format(precision_n))
+    logging.info('Recall Score: {}'.format(recall_n))
+    logging.info('F1 Score: {}'.format(f1_n))
 
     logging.info(classification_report(true_labels, predicted_labels))
     logging.info(confusion_matrix(true_labels, predicted_labels))
-
-    return f1, precision, recall, \
-           f1_m, precision_m, recall_m, \
-           f1_mi, precision_mi, recall_mi, \
-           f1_n, precision_n, recall_n
 
 
 def translate(label):

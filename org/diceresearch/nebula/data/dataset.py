@@ -164,7 +164,7 @@ class WiseDataset(Dataset):
         return len(self.label)
 
     def __getitem__(self, index):
-        scores = torch.tensor(self.wise_score[index], dtype=torch.float32)
+        scores = torch.tensor(self.wise_score[index], dtype=torch.float32).unsqueeze(-1)
         labels = torch.tensor(self.label[index], dtype=torch.float32)
         return scores, labels
 

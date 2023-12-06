@@ -3,13 +3,13 @@ import logging
 import threading
 from datetime import datetime
 
-from claim_worthiness_check import claimworthinesscheckerdummy, claimworthinesschecker
+from claim_worthiness_check import dummy_claim_check, claim_buster
 from coref_resolution import coreference_resolution
 from database import databasemanager
-from evidence_retrieval import evidenceretrieval
+from evidence_retrieval import elastic_search
 import settings
-from stance_detection import stancedetection
-from translation import translator
+from stance_detection import cosine_similarity
+from translation import neamt_translator
 from indicators.main import run_indicator_check_text
 from veracity_detection import predictions
 
@@ -42,12 +42,12 @@ def goNextLevel(identifier):
     current_stage = int(stage_number)
 
     # notification
-    REGISTRATION_TOKEN = current[14]
+    REGISTRATION_TOKEN = current[16]
     NOTIFICATION_TITLE = "Your result is ready!"
     NOTIFICATION_BODY = f"Your result with ID {identifier} is now available.",
 
     next_stage = current_stage + 1
-    logging.info("Current stage is : {}".format(current_stage))
+    logging.debug("Current stage is : {}".format(current_stage))
 
     if next_stage == 1:
         logging.info("Orch: {}".format(identifier))
@@ -62,7 +62,7 @@ def goNextLevel(identifier):
         if input_lang != "en" and not translated_text:
             # start the translation step
             logging.debug("Translation step")
-            thread = threading.Thread(target=translator.send_translation_request, args=(input_text, identifier))
+            thread = threading.Thread(target=neamt_translator.send_translation_request, args=(input_text, identifier))
             thread.start()
         else:
             # skip the stage
@@ -84,20 +84,20 @@ def goNextLevel(identifier):
         logging.debug("Claim check")
 
         if settings.module_claimworthiness == "dummy":
-            thread = threading.Thread(target=claimworthinesscheckerdummy.check, args=(coref_text, identifier))
+            thread = threading.Thread(target=dummy_claim_check.check, args=(coref_text, identifier))
             thread.start()
         else:
-            thread = threading.Thread(target=claimworthinesschecker.check, args=(coref_text, identifier))
+            thread = threading.Thread(target=claim_buster.check, args=(coref_text, identifier))
             thread.start()
 
     elif next_stage == 4:
         logging.debug("Evidence retrieval")
-        thread = threading.Thread(target=evidenceretrieval.retrieve, args=(claims, identifier))
+        thread = threading.Thread(target=elastic_search.retrieve, args=(claims, identifier))
         thread.start()
 
     elif next_stage == 5:
         logging.debug("Stance detection")
-        thread = threading.Thread(target=stancedetection.calculate, args=(claims, identifier))
+        thread = threading.Thread(target=cosine_similarity.calculate, args=(claims, identifier))
         thread.start()
 
     elif next_stage == 6:

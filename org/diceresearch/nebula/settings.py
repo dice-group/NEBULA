@@ -44,7 +44,7 @@ translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 translator = "opus_mt"
 
 # Coreference resolution
-coref_endpoint = "http://localhost:9090/validate"
+coref_endpoint = "http://nebulavm2-bullseye.cs.upb.de:9090/validate"
 
 # claim check options
 module_claimworthiness = "claimbuster"
@@ -62,12 +62,18 @@ stancedetection_api = "http://localhost:8001/check/"
 
 # WISE options
 trained_model = "./resources/model_130723.pt"
-rnn_model = "./resources/model_rnn_041223.pt"
-model_timestamp = "2023-12-04"  # WISE model last trained date
+model_timestamp = "2023-07-13"  # WISE model last trained date
 low_threshold = 0.66  # Thresholds to be used in case of regression model
 high_threshold = 0.69
-class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']
-false_label = 'REFUTED'
+class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']  # fever labels
+
+# Final WISE step options
+rnn_model = "./resources/model_rnn_061223.pt"
+final_model_timestamp = "2023-12-06"
+final_low_threshold = 0.46  # Thresholds to be used in case of regression model
+final_high_threshold = 0.47
+final_class_labels = ['UNRELIABLE', 'MIXED', 'RELIABLE']  # nela labels
+false_label = 'UNRELIABLE'
 
 # Reference corpus last modified date
 knowledge_timestamp = "2023-05-31"
