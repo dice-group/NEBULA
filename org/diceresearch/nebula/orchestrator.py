@@ -11,6 +11,7 @@ import settings
 from stance_detection import cosine_similarity
 from translation import neamt_translator
 from indicators.main import run_indicator_check_text
+from utils.util import SetEncoder
 from veracity_detection import predictions
 
 from utils import notification
@@ -107,7 +108,7 @@ def goNextLevel(identifier):
 
     elif next_stage == 7:
         logging.debug('Query the trained RNN model')
-        thread = threading.Thread(target=predictions.predict_rnn, args=(claims, identifier))
+        thread = threading.Thread(target=predictions.predict_mean, args=(claims, identifier))
         thread.start()
 
     elif next_stage == 8:
@@ -115,8 +116,9 @@ def goNextLevel(identifier):
         if veracity_label == settings.false_label:
             indicators = run_indicator_check_text(input_text)
             status = settings.completed
-            databasemanager.update_step(settings.results_table_name, settings.results_indicator_check,
-                                        indicators, identifier)
+            indicator_json = json.dumps(indicators, cls=SetEncoder)
+            databasemanager.update_json_step(settings.results_table_name, settings.results_indicator_check,
+                                        indicator_json, identifier)
         else:
             # otherwise show skipped status
             status = settings.skipped

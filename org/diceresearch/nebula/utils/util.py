@@ -101,3 +101,10 @@ class Tape:
 
     def get(self, i):
         return self.r[i]
+
+
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return super(SetEncoder, self).default(obj)
