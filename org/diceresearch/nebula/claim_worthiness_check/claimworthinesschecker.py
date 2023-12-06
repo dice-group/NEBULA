@@ -3,7 +3,7 @@ import threading
 
 import pandas as pd
 
-import httpmanager
+from database import httpmanager
 import orchestrator
 import settings
 from utils.database_utils import log_exception, update_database_json
