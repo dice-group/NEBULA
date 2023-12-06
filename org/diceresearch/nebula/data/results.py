@@ -87,14 +87,16 @@ class Provenance(object):
     """
         Provenance information
     """
-    def __init__(self, knowledge_date, model_date):
+    def __init__(self, knowledge_date, model_date, final_model_date):
         """
         Constructor.
         :param knowledge_date: Knowledge base last modified date
-        :param model_date: WISE models last trained date
+        :param model_date: WISE's first step model last trained date
+        :param final_model_date: WISE final step model last trained date
         """
         self.knowledge_date = knowledge_date
         self.model_date = model_date
+        self.final_model_date = final_model_date
 
 
 class ResponseStatus(Result):

@@ -34,7 +34,7 @@ def get_optimal_thresholds(thresholds_range, classes, scores, true_labels):
             if f1 > best_f1:
                 best_f1 = f1
                 best_thresholds = (threshold1, threshold2)
-                logging.debug('Current best macro F1-score {0} with thresholds {1}'.format(best_f1, best_thresholds))
+                logging.info('Current best macro F1-score {0} with thresholds {1}'.format(best_f1, best_thresholds))
     return best_thresholds
 
 

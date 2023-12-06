@@ -179,36 +179,69 @@ class MLP(torch.nn.Sequential, BaseWise):
 
 
 class WISE(torch.nn.Module, BaseWise):
+    """
+        Default RNN implementation followed by a linear and an output activation_output layer
+    """
+
     def __init__(self, input_size, hidden_size, num_layers, nonlinearity, bias, batch_first, dropout, bidirectional,
-                 output_size):
+                 output_size, activation_output: Optional[Callable[..., torch.nn.Module]] = None):
+        """
+        Constructor
+        :param input_size: Input size
+        :param hidden_size: Number of hidden features
+        :param num_layers: Number of recurrent layers
+        :param nonlinearity: Non-linearity function
+        :param bias: Bias
+        :param batch_first: if (batch, seq, feature) or (seq, batch, feature)
+        :param dropout: Dropout rate
+        :param bidirectional: Bidirectional
+        :param output_size: Output neurons
+        :param activation_output: Output activation function
+        """
         super(WISE, self).__init__()
         BaseWise.__init__(self)  # Explicitly call the Base class initializer
         self.rnn = torch.nn.RNN(input_size=input_size, hidden_size=hidden_size, num_layers=num_layers,
                                 nonlinearity=nonlinearity, bias=bias, batch_first=batch_first, dropout=dropout,
                                 bidirectional=bidirectional)
         self.fc = torch.nn.Linear(hidden_size, output_size)
-        self.sigmoid = torch.nn.Sigmoid()
+        self.activation_output = activation_output
 
     def forward(self, x):
+        """
+
+        :param x: Network input
+        :return: Network output
+        """
         output, _ = self.rnn(x)
         output = self.fc(output[:, -1, :])  # on last step
-        output = self.sigmoid(output)
+        output = self.activation_output(output)
         return output
 
     def test_model(self, x_test):
+        """
+        Deactivates gradient tracking to predict
+
+        :param x_test: Data to predict on
+        :return: Prediction
+        """
         self.eval()
         with torch.no_grad():
             return self(x_test)
 
 
 class FocalLoss(torch.nn.Module):
+    """
+    Focal Loss implementation
+    FL(p_t)=−(1−p_t)^γ⋅ \times log(p_t)
+    """
+
     def __init__(self, gamma=2, alpha=None):
         super(FocalLoss, self).__init__()
         self.gamma = gamma
         self.alpha = alpha
 
     def forward(self, inputs, targets):
-        ce_loss = torch.nn.functional.binary_cross_entropy(inputs, targets, reduction='none')
+        ce_loss = torch.nn.functional.binary_cross_entropy_with_logits(inputs, targets, reduction='none')
         pt = torch.exp(-ce_loss)
         focal_loss = (1 - pt) ** self.gamma * ce_loss
 

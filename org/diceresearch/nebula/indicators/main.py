@@ -3,7 +3,7 @@ from pprint import pprint
 from typing import Any
 import tomlkit
 from tomlkit import load
-from layout_and_formal import *
+from indicators.layout_and_formal import *
 
 # ToDo Import check_for_excessive_capitalization, check_for_excessive_emojis, check_for_excessive_hashtags,
 #  check_for_incorrect_spelling

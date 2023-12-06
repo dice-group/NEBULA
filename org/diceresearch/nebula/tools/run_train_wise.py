@@ -4,16 +4,16 @@ from logging.config import fileConfig
 
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
 
 import settings
+from tools.run_train import calculate_metrics
 from utils.util import read_jsonl_from_file, get_optimal_thresholds, translate_to_classes
 
 from data.dataset import WiseDataset, zero_pad_batch
 from veracity_detection.model import WISE
 
 """
-    Training script for the first step of a JSON Lines file.
+    Training script for WISE's final step of a JSON-Lines file.
 """
 
 
@@ -28,7 +28,7 @@ def parse_args():
     parser.add_argument('--save', default='resources/model_rnn.pt',
                         help='Path where to save the trained model')
     parser.add_argument('--dropout', default=0.0, type=float, help='Dropout rate')
-    parser.add_argument('--epochs', default=10, type=int, help='Number of epochs')
+    parser.add_argument('--epochs', default=100, type=int, help='Number of epochs')
     parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
@@ -45,14 +45,15 @@ def main():
     training_data = read_jsonl_from_file(args.train_file)
 
     # convert to Dataset and to DataLoader
-    labels = {0: 1, 1: 0, 2: 0.5} # NELA labels
+    labels = {0: 1, 1: 0, 2: 0.5}  # NELA labels
     train_dataset = WiseDataset(jsonl=training_data, label_dict=labels)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True,
                                                collate_fn=zero_pad_batch)
 
     # create model
     model = WISE(input_size=1, hidden_size=64, num_layers=5, nonlinearity='relu', bias=True,
-                 batch_first=True, dropout=args.dropout, bidirectional=False, output_size=1)
+                 batch_first=True, dropout=args.dropout, bidirectional=False, output_size=1,
+                 activation_output=torch.nn.Sigmoid())
     logging.info(model)
 
     # train
@@ -90,45 +91,8 @@ def main():
     predicted_labels = [translate_to_classes(score, best_thresholds[0], best_thresholds[1], class_labels)
                         for score in predicted_scores]
 
-    # Compute accuracy
-    accuracy = accuracy_score(true_labels, predicted_labels)
-    logging.info('Accuracy Score: {}'.format(accuracy))
-
-    # Compute weighted metrics
-    f1 = f1_score(true_labels, predicted_labels, average='weighted', labels=class_labels)
-    precision = precision_score(true_labels, predicted_labels, average='weighted', labels=class_labels)
-    recall = recall_score(true_labels, predicted_labels, average='weighted', labels=class_labels)
-    logging.info('Weighted Precision Score: {}'.format(precision))
-    logging.info('Weighted Recall Score: {}'.format(recall))
-    logging.info('Weighted F1 Score: {}'.format(f1))
-
-    # Compute macro metrics
-    f1_m = f1_score(true_labels, predicted_labels, average='macro', labels=class_labels)
-    precision_m = precision_score(true_labels, predicted_labels, average='macro', labels=class_labels)
-    recall_m = recall_score(true_labels, predicted_labels, average='macro', labels=class_labels)
-    logging.info('Macro Precision Score: {}'.format(precision_m))
-    logging.info('Macro Recall Score: {}'.format(recall_m))
-    logging.info('Macro F1 Score: {}'.format(f1_m))
-
-    # Compute metrics per label
-    f1_n = f1_score(true_labels, predicted_labels, average=None, labels=class_labels)
-    precision_n = precision_score(true_labels, predicted_labels, average=None, labels=class_labels)
-    recall_n = recall_score(true_labels, predicted_labels, average=None, labels=class_labels)
-    logging.info('Precision Score: {}'.format(precision_n))
-    logging.info('Recall Score: {}'.format(recall_n))
-    logging.info('F1 Score: {}'.format(f1_n))
-
-    f1_mi = f1_score(true_labels, predicted_labels, average='micro', labels=class_labels)
-    precision_mi = precision_score(true_labels, predicted_labels, average='micro', labels=class_labels)
-    recall_mi = recall_score(true_labels, predicted_labels, average='micro', labels=class_labels)
-    logging.info('Micro Precision Score: {}'.format(precision_mi))
-    logging.info('Micro Recall Score: {}'.format(recall_mi))
-    logging.info('Micro F1 Score: {}'.format(f1_mi))
-
-    # ovr_auc = roc_auc_score(true_labels, predicted_labels, average='macro', labels=class_labels, multi_class='ovr')
-    # ovo_auc = roc_auc_score(true_labels, predicted_labels, average='macro', labels=class_labels, multi_class='ovo')
-    # logging.info('OVR ROC AUC Score: {}'.format(ovr_auc))
-    # logging.info('OVO ROC AUC Score: {}'.format(ovo_auc))
+    # calculate metrics for best thresholds
+    calculate_metrics(true_labels, predicted_labels, class_labels)
 
 
 def translate(label):
