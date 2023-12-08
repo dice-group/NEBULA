@@ -127,7 +127,7 @@ def status():
     j_obj = json.loads(first)
     j_obj['provenance'] = Provenance(settings.knowledge_timestamp, settings.model_timestamp,
                                      settings.final_model_timestamp).__dict__
-    j_obj = json.dumps(j_obj, indent=3)
+    j_obj = json.dumps(j_obj, indent=3, ensure_ascii=False).encode('utf8')
     return Response(j_obj, status=200, mimetype='application/json')
 
 
@@ -162,7 +162,7 @@ def raw_status():
     j_obj = json.loads(first)
     j_obj['provenance'] = Provenance(settings.knowledge_timestamp, settings.model_timestamp,
                                      settings.final_model_timestamp).__dict__
-    j_obj = json.dumps(j_obj, indent=3)
+    j_obj = json.dumps(j_obj, indent=3, ensure_ascii=False).encode('utf8')
     return Response(j_obj, status=200, mimetype='application/json')
 
 
