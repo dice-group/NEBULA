@@ -11,6 +11,7 @@ import settings
 from data.results import ResponseStatus, Provenance
 from database.initiatedatabase import create_database_if_not_exists
 from utils.util import trim
+from unidecode import unidecode
 
 app = Flask(__name__)
 fileConfig(settings.logging_config)
@@ -84,6 +85,10 @@ def check():
     # Return BadRequest if text is not specified
     if not text:
         return jsonify({'Error': 'Text is required'}), 400
+
+    # parse unicode
+    text = bytes(text, 'utf-8').decode('unicode_escape')
+    translated_text = bytes(translated_text, 'utf-8').decode('unicode_escape')
 
     # Start pipeline
     id = start_pipeline(text, translated_text, lang)
