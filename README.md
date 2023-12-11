@@ -28,7 +28,7 @@ http://127.0.0.1:5000
 
 __Methods__
 
-The Nebula application provides three methods: **check** ,**status**, **test or default**.
+The Nebula application provides three methods: **check** ,**status**,**rawstatus**, **test or default**.
 
 **Check Method**
 The check method accepts both POST and GET requests, and requires a text input to check for accuracy. Optional language input can also be provided for the text.
@@ -37,7 +37,7 @@ For POST requests, the text [text] input and optional language input [lang] shou
 Below are some examples of the POST request.
 
 ```shell
-curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"lang": "en", "text": "Text I want to check"}'
+curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"lang": "en", "text": "Text I want to check", "token": "device_token", "translation": "translated_text"}'
 ```
 
 ```python
@@ -46,7 +46,9 @@ import requests
 CHECK_URL = "http://nebulavm.cs.upb.de/check"
 input = {
     'lang': 'en',
-    'text': 'Text we want to check'
+    'text': 'Text we want to check',
+    'token': 'device_token',
+    'translation': 'translated_text'
 }
 req = requests.post(CHECK_URL, json=input)
 ```
@@ -77,7 +79,16 @@ The check method will return a JSON object containing an ID for the text input. 
 }
 ```
 
-**Status Method**
+Input parameters | Description | 
+--- | --- | 
+_lang_ | Language of the input text. If the language is not set to 'en' and not translation is provided, NEBULA will first translate it to english. The default is 'nd'.  |
+_text_ | The text we want to verify the veracity for. |
+_token_ | The device token to notify of an available fact-checking result. |
+_translation_ | The english translation of the input text. Used if we want to skip the translation step. |
+
+
+
+**Status/Rawstatus Method**
 The status method also accepts both POST and GET requests, and requires an ID input to check the status of a previously submitted text input.
 
 For POST requests, the ID input should be passed in the request body.
@@ -86,7 +97,7 @@ The status method will return a JSON object containing information on the status
 
 ```
 {
-    "id": "http://nebula.cs.uni-paderborn.de/id/123",
+    "id": "123",
     "status": "Done",
     "text": "Text that has been checked",
     "lang": "Given language or detected language",
