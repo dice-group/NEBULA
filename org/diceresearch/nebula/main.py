@@ -86,8 +86,8 @@ def check():
         return jsonify({'Error': 'Text is required'}), 400
 
     # parse unicode
-    text = bytes(text, 'utf-8').decode('unicode_escape')
-    translated_text = bytes(translated_text, 'utf-8').decode('unicode_escape')
+    # text = bytes(text, 'utf-8').decode('unicode_escape')
+    # translated_text = bytes(translated_text, 'utf-8').decode('unicode_escape')
 
     # Start pipeline
     id = start_pipeline(text, translated_text, lang)
