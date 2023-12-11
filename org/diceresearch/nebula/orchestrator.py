@@ -45,7 +45,7 @@ def goNextLevel(identifier):
     # notification
     REGISTRATION_TOKEN = current[16]
     NOTIFICATION_TITLE = "Your result is ready!"
-    NOTIFICATION_BODY = f"Your result with ID {identifier} is now available.",
+    NOTIFICATION_BODY = "Your result with ID {} is now available.".format(identifier),
 
     next_stage = current_stage + 1
     logging.debug("Current stage is : {}".format(current_stage))
