@@ -194,7 +194,7 @@ python3 run_train_rnn.py --train-file train_file.jsonl --test-file test_file.jso
 Name   | Description
 ------ | ---------------------------------------------
 `--train-file` | Training split in jsonl format. <br /> **Required**: &#9745; | 
-`--val-file` | Validation split in jsonl format. <br /> **Required**: &#9744; <br /> **Default**: None | 
+`--val-file` | Validation split in jsonl format. <br /> **Required**: &#9744; <br /> **Default**: `None` | 
 `--test-file` | Testing split in jsonl format. <br /> **Required**: &#9745;  | 
 `--save` | Path to save the model. <br /> **Required**: &#9744; <br /> **Default**: `resources/model.pt` | 
 `--top-k` | Top k evidence to be retained. <br /> **Required**: &#9744; <br /> **Default**: `10` | 
