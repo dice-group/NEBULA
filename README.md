@@ -36,12 +36,11 @@ http://127.0.0.1:8080
 
 ## Methods
 
-The Nebula application provides four methods: **check** ,**status**, **rawstatus**, and **test**.
+The Nebula application provides four methods: **check** , **status**, **rawstatus**, and **test**.
 
 ### /check
-The check method accepts both POST and GET requests, and requires a text input to check for accuracy. Optional language input can also be provided for the text.
-
-For POST requests, the text [text] input and optional language input [lang] should be passed in the request body.
+The check method accepts both POST and GET requests, and requires a text input to check for veracity. 
+For POST requests, the text [text] input should be passed in the request body.
 Below are some examples of the POST request.
 
 ```shell
@@ -60,7 +59,7 @@ req = requests.post(CHECK_URL, json=input)
 ```
 
 
-For GET requests, the  text [text] input should be passed in the URL arguments along with the optional language input [lang]. 
+For GET requests, the  text [text] input should be passed in the URL arguments. 
 Below are some examples of the GET request.
 ```shell
 curl --location 'http://nebulavm.cs.upb.de/check?text=Text%20you%20want%20to%20check'
@@ -182,7 +181,7 @@ Name   | Description
 `id` | The request ID. <br /> Output ID of the `/check` endpoint. <br /> **Required**: &#9745; |    
 
 ### /test or /default 
-Method to check if the enpoint is up. It accepts Get and if the service is running answers with an OK status message:
+Method to check if the enpoint is up. It accepts a GET request and if the service is running, it answers with an OK status message:
 ```
 {"Status":"OK"}
 ```
