@@ -56,6 +56,11 @@ def getOne(which_table, row_identifier):
             cursor.execute(f"select * from {which_table}  WHERE IDENTIFIER = ?", (row_identifier,))
             one = cursor.fetchone()
             logging.debug("SELECT done  ")
+
+            # Get column names and zip it to the result
+            columns = [column[0] for column in cursor.description]
+            one = dict(zip(columns, one))
+
             cursor.close()
             return one
     except sqlite3.Error as error:
@@ -74,7 +79,7 @@ def increase_the_stage(which_table, row_identifier):
     if one == None:
         logging.warning("There are no results for this query")
     else:
-        stage = int(one[1])
+        stage = int(one[settings.stage_number])
         stage = stage+1
         try:
             with sqlite3.connect(settings.database_name) as sqliteConnection:

@@ -26,13 +26,13 @@ def goNextLevel(identifier):
     """
     current = databasemanager.getOne(settings.results_table_name, identifier)
 
-    stage_number = current[1]
-    input_lang = current[2]
-    input_text = current[3]
-    translated_text = current[4]
-    coref_text = current[5]
-    sentences = current[14]
-    veracity_label = current[20]
+    stage_number = current[settings.stage_number]
+    input_lang = current[settings.results_inputlang_column_name]
+    input_text = current[settings.results_inputtext_column_name]
+    translated_text = current[settings.results_translation_column_name]
+    coref_text = current[settings.results_coref_column_name]
+    sentences = current[settings.sentences]
+    veracity_label = current[settings.results_veracity_label]
 
     # If the record could not be found
     if current is None:
@@ -42,7 +42,7 @@ def goNextLevel(identifier):
         claims = json.loads(sentences)
 
     # notification
-    REGISTRATION_TOKEN = current[16]
+    REGISTRATION_TOKEN = current[settings.results_notificationtoken_column_name]
     NOTIFICATION_TITLE = "Your result is ready!"
     NOTIFICATION_BODY = "Your result with ID {} is now available.".format(identifier)
 

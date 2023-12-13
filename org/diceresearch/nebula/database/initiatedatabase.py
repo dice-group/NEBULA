@@ -12,7 +12,7 @@ def create_database_if_not_exists():
         with sqlite3.connect(settings.database_name) as conn:
             conn.execute(f"""CREATE TABLE IF NOT EXISTS {settings.results_table_name}
                  (IDENTIFIER           TEXT    NOT NULL,
-                 STAGE_NUMBER            INTEGER     NOT NULL,
+                 {settings.stage_number}            INTEGER     NOT NULL,
                  {settings.results_inputlang_column_name}           TEXT,
                  {settings.results_inputtext_column_name}           TEXT,
                  {settings.results_translation_column_name}           TEXT,
@@ -31,7 +31,7 @@ def create_database_if_not_exists():
                  VERSION TEXT,
                  ERROR_BODY TEXT,
                  CHECK_TIMESTAMP DATETIME,
-                 VERACITY_LABEL TEXT,
+                 {settings.results_veracity_label} TEXT,
                  {settings.results_indicator_check} TEXT,
                  {settings.results_indicator_check_status} TEXT
                  );""")
