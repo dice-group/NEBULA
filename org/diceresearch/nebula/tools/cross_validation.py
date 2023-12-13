@@ -15,6 +15,11 @@ from veracity_detection.model import MLP
 from tools.run_train import load_scores, get_regression_metrics, calculate_metrics, translate
 
 
+"""
+    Deprecated - no longer required. Turn to Bayesian optimization instead.    
+    Time-consuming due to CV scheme paired with grid-search and best regression thresholds search.
+"""
+
 def parse_args():
     """
     Parse program arguments
