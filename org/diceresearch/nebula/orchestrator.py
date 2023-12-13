@@ -8,6 +8,7 @@ from coref_resolution import coreference_resolution
 from database import databasemanager
 from evidence_retrieval import elastic_search
 import settings
+from exception_handling.exceptions import UnsupportedStage
 from stance_detection import cosine_similarity
 from translation import neamt_translator
 from indicators.main import run_indicator_check_text
@@ -39,14 +40,14 @@ def goNextLevel(identifier):
 
     if sentences:
         claims = json.loads(sentences)
-    # Increase fact checking step
-    current_stage = int(stage_number)
 
     # notification
     REGISTRATION_TOKEN = current[16]
     NOTIFICATION_TITLE = "Your result is ready!"
-    NOTIFICATION_BODY = "Your result with ID {} is now available.".format(identifier),
+    NOTIFICATION_BODY = "Your result with ID {} is now available.".format(identifier)
 
+    # Increase fact checking step
+    current_stage = int(stage_number)
     next_stage = current_stage + 1
     logging.debug("Current stage is : {}".format(current_stage))
 
@@ -63,8 +64,7 @@ def goNextLevel(identifier):
         if input_lang != "en" and not translated_text:
             # start the translation step
             logging.debug("Translation step")
-            thread = threading.Thread(target=neamt_translator.send_translation_request, args=(input_text, identifier))
-            thread.start()
+            neamt_translator.send_translation_request(input_text, identifier)
         else:
             # skip the stage
             logging.debug("Skipping translation")
@@ -77,41 +77,34 @@ def goNextLevel(identifier):
 
     elif next_stage == 2:
         logging.debug("Coreference resolution")
-        thread = threading.Thread(target=coreference_resolution.send_coref_request,
-                                  args=(translated_text, identifier))
-        thread.start()
+        coreference_resolution.send_coref_request(translated_text, identifier)
 
     elif next_stage == 3:
         logging.debug("Claim check")
 
         if settings.module_claimworthiness == "dummy":
-            thread = threading.Thread(target=dummy_claim_check.check, args=(coref_text, identifier))
-            thread.start()
+            dummy_claim_check.check(coref_text, identifier)
         else:
-            thread = threading.Thread(target=claim_buster.check, args=(coref_text, identifier))
-            thread.start()
+            claim_buster.check(coref_text, identifier)
 
     elif next_stage == 4:
         logging.debug("Evidence retrieval")
-        thread = threading.Thread(target=elastic_search.retrieve, args=(claims, identifier))
-        thread.start()
+        elastic_search.retrieve(claims, identifier)
 
     elif next_stage == 5:
         logging.debug("Stance detection")
-        thread = threading.Thread(target=cosine_similarity.calculate, args=(claims, identifier))
-        thread.start()
+        cosine_similarity.calculate(claims, identifier)
 
     elif next_stage == 6:
         logging.debug('Query the trained model')
-        thread = threading.Thread(target=predictions.predict, args=(claims, identifier))
-        thread.start()
+        predictions.predict(claims, identifier)
 
     elif next_stage == 7:
         logging.debug('Query the trained RNN model')
-        thread = threading.Thread(target=predictions.predict_mean, args=(claims, identifier))
-        thread.start()
+        predictions.predict_mean(claims, identifier)
 
     elif next_stage == 8:
+        logging.debug('Run indicator check')
         # run indicators if label is false
         if veracity_label == settings.false_label:
             indicators = run_indicator_check_text(input_text)
@@ -130,16 +123,15 @@ def goNextLevel(identifier):
         goNextLevel(identifier)
 
     elif next_stage == 9:
+        logging.info("Finished processing orch: {}".format(identifier))
         # set status as done and send push notification to device token if existing
         databasemanager.update_step(settings.results_table_name, settings.status, settings.done, identifier)
         if REGISTRATION_TOKEN:
             notification.send_firebase_notification(REGISTRATION_TOKEN, NOTIFICATION_TITLE, NOTIFICATION_BODY)
             databasemanager.delete_from_column(settings.results_table_name,
                                                settings.results_notificationtoken_column_name)
-    elif next_stage == 10:
-        pass
     else:
-        pass
+        raise UnsupportedStage
 
 
 

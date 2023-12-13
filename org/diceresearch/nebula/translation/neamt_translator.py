@@ -24,7 +24,6 @@ def send_translation_request(textToTranslate, identifier):
                         settings.results_translation_column_status, result, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)
