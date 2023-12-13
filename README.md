@@ -23,12 +23,12 @@ python main.py
 The application will provide an API endpoint at:
 
 ```
-http://127.0.0.1:5000
+http://127.0.0.1:8080
 ```
 
 __Methods__
 
-The Nebula application provides three methods: **check** ,**status**,**rawstatus**, **test or default**.
+The Nebula application provides three methods: **check** ,**status**, **rawstatus**, and **test**.
 
 **Check Method**
 The check method accepts both POST and GET requests, and requires a text input to check for accuracy. Optional language input can also be provided for the text.
@@ -37,18 +37,17 @@ For POST requests, the text [text] input and optional language input [lang] shou
 Below are some examples of the POST request.
 
 ```shell
-curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"lang": "en", "text": "Text I want to check", "token": "device_token", "translation": "translated_text"}'
+curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"lang": "en", "text": "Text I want to check"}'
 ```
 
+Python example:
 ```python
 import requests
 
 CHECK_URL = "http://nebulavm.cs.upb.de/check"
 input = {
     'lang': 'en',
-    'text': 'Text we want to check',
-    'token': 'device_token',
-    'translation': 'translated_text'
+    'text': 'Text we want to check'
 }
 req = requests.post(CHECK_URL, json=input)
 ```
@@ -59,6 +58,7 @@ Below are some examples of the GET request.
 ```shell
 curl --location 'http://nebulavm.cs.upb.de/check?lang=en&text=Text%20you%20want%20to%20check'
 ```
+Python example:
 ```python
 import requests
 
@@ -78,13 +78,23 @@ The check method will return a JSON object containing an ID for the text input. 
     "id": "123"
 }
 ```
+**Required parameters**
 
-Input parameters | Description | 
+Name   | Description
+------ | ---------------------------------------------
+`text` | The input text to be verified by NEBULA. |             
+
+
+
+
+**Optional parameters**
+
+Name | Description | 
 --- | --- | 
-_lang_ | Language of the input text. If the language is not set to 'en' and not translation is provided, NEBULA will first translate it to english. The default is 'nd'.  |
-_text_ | The text we want to verify the veracity for. |
-_token_ | The device token to notify of an available fact-checking result. |
-_translation_ | The english translation of the input text. Used if we want to skip the translation step. |
+`lang` | Language of the input text. <br />  If the language is not set to 'en' and translation is not provided, NEBULA will first translate it to english. <br /> **Default**: `nd`  |
+`token` | The device token to notify of an available fact-checking result. <br /> **Default**: `None`  |
+`translation` | The english translation of the input text. <br /> **Default**: `None`  |                       |
+
 
 
 
@@ -111,6 +121,12 @@ The status method will return a JSON object containing information on the status
 }
 Note that the result value may differ during development phase.
 ```
+
+**Required parameters**
+
+Name   | Description
+------ | ---------------------------------------------
+`id` | The request ID. <br /> Output of the `/check` endpoint. |    
 
 **test or default**
 accept Get and if the service is running answer with this
