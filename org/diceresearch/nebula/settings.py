@@ -7,6 +7,7 @@ load_dotenv()
 # Database table name and column names
 database_name = "db20230530.db"
 results_table_name="RESULTS"
+stage_number="STAGE_NUMBER"
 results_inputtext_column_name = "INPUT_TEXT"
 results_inputlang_column_name = "INPUT_LANG"
 results_translation_column_name = "TRANSLATED_TEXT"
