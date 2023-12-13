@@ -26,11 +26,11 @@ The application will provide an API endpoint at:
 http://127.0.0.1:8080
 ```
 
-__Methods__
+## Methods
 
-The Nebula application provides three methods: **check** ,**status**, **rawstatus**, and **test**.
+The Nebula application provides four methods: **check** ,**status**, **rawstatus**, and **test**.
 
-**Check Method**
+### /check
 The check method accepts both POST and GET requests, and requires a text input to check for accuracy. Optional language input can also be provided for the text.
 
 For POST requests, the text [text] input and optional language input [lang] should be passed in the request body.
@@ -78,7 +78,7 @@ The check method will return a JSON object containing an ID for the text input. 
     "id": "123"
 }
 ```
-**Required parameters**
+**Parameters**
 
 Name   | Description
 ------ | ---------------------------------------------
@@ -89,8 +89,7 @@ Name   | Description
 
 
 
-
-**Status/Rawstatus Method**
+### /status and /rawstatus
 The status method also accepts both POST and GET requests, and requires an ID input to check the status of a previously submitted text input.
 
 For POST requests, the ID input should be passed in the request body.
@@ -169,13 +168,14 @@ The status method will return a JSON object containing information on the status
 
 Note that the result value may differ during development phase.
 
-**Required parameters**
+**Parameters**
 
 Name   | Description
 ------ | ---------------------------------------------
 `id` | The request ID. <br /> Output ID of the `/check` endpoint. <br /> **Required**: &#9745; |    
 
-**test or default** accept Get and if the service is running answer with this
+### /test or /default 
+Method to check if the enpoint is up. It accepts Get and if the service is running answers with an OK status message:
 ```
 {"Status":"OK"}
 ```
@@ -189,7 +189,7 @@ python3 run_train.py --train-file train_file.jsonl --test-file test_file.jsonl
 python3 run_train_wise.py --train-file train_file.jsonl --test-file test_file.jsonl
 ```
 
-**Required parameters**
+**Parameters**
 
 Name   | Description
 ------ | ---------------------------------------------
