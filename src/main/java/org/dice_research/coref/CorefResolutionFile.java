@@ -117,8 +117,10 @@ public class CorefResolutionFile extends CoreferenceResolution {
 						return;
 					}
 					String accutal = generateCrR(json.getString("article_text"));
-					String print = id + ", " + accutal;
-					queue.put(print);
+					JSONObject result = new JSONObject();
+					result.append("id", id);
+					result.append("coreferenced_result", accutal);
+					queue.put(result.toString());
 				} catch (Exception e) {
 					e.printStackTrace();
 					// just skip the iteration if anything goes wrong

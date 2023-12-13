@@ -202,3 +202,4 @@ Name   | Description
 `--epochs` | Number of epochs. <br /> **Required**: &#9744; <br /> **Default**: `150`| 
 `--batch-size` | Batch size. <br /> **Required**: &#9744; <br /> **Default**: `512`| 
 `--learning-rate` | Learning rate. <br /> **Required**: &#9744; <br /> **Default**: `1e-4` | 
+`--oversampler` | Flag for SMOTE oversampler. <br /> **Required**: &#9744; <br /> **Default**: `False` | 
