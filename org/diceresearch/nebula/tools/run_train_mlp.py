@@ -36,6 +36,7 @@ def parse_args():
     parser.add_argument('--epochs', default=150, type=int, help='Number of epochs')
     parser.add_argument('--batch-size', default=512, type=int, help='Batch size')
     parser.add_argument('--learning-rate', default=1e-4, type=float, help='Learning rate')
+    parser.add_argument('--oversampler', default=False, action=argparse.BooleanOptionalAction, help='Flag to use SMOTE oversampler')
     parser.add_argument('--save-predictions', default='resources/predictions.txt', type=str,
                         help='Path where to save the predictions')
     return parser.parse_args()
@@ -50,16 +51,16 @@ def main():
     training_data = read_jsonl_from_file(args.train_file)
 
     # Use this to oversample from the minority classes
-    seed = random.randint(0, 1e6)
-    logging.debug('Seed for over sampler: {0}'.format(seed))
-    oversampler = None
-    # oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
+    if args.oversampler:
+        seed = random.randint(0, 1e6)
+        logging.debug('Seed for over sampler: {0}'.format(seed))
+        oversampler = SMOTE(sampling_strategy='auto', random_state=seed)
 
     # FEVER labels to int
     label_dict = {"SUPPORTS": 1, "NOT ENOUGH INFO": 0, "REFUTES": -1}
 
     # convert to Dataset and to DataLoader
-    scaler = MinMaxScaler()
+    scaler = None  # MinMaxScaler()
     train_dataset = StanceDataset(jsonl=training_data, k=args.top_k, resample=oversampler, is_train=True, scaler=scaler, label_dict=label_dict)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, drop_last=True, shuffle=True)
 
