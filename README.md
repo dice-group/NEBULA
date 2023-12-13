@@ -83,9 +83,9 @@ The check method will return a JSON object containing an ID for the text input. 
 Name   | Description
 ------ | ---------------------------------------------
 `text` | The input text to be verified by NEBULA. <br /> **Required**: &#9745;  |             
-`lang` | Language of the input text. <br />  If the language is not set to 'en' and translation is not provided, NEBULA will first translate it to english. <br /> **Required**: &#9744; <br /> **Default**: `nd`  |
-`token` | The device token to notify of an available fact-checking result. <br /> **Required**: &#9744; <br /> **Default**: `None`  |
-`translation` | The english translation of the input text. <br /> **Required**: &#9744; <br /> **Default**: `None`  |                       |
+`lang` | Language of the input text. <br /> **Effect**: It will translate the text to english if the language is not set to 'en' and a translation hasn't been specified. <br /> **Required**: &#9744; <br /> **Default**: `nd`  |
+`token` | The device token to notify of an available fact-checking result. <br /> **Effect**: Answer will be sent as push message to the mobile device with this token. <br /> **Required**: &#9744; <br /> **Default**: `None`  |
+`translation` | The english translation of the input text. <br />  **Effect**: The translated text will be used instead of generating an own translation. <br /> **Required**: &#9744; <br /> **Default**: `None`  |                       |
 
 
 
