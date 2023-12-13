@@ -182,11 +182,11 @@ Method to check if the enpoint is up. It accepts Get and if the service is runni
 
 ## Training WISE
 WISE is the last veracity step of our pipeline.
-It consists of an MLP for the single-claim score aggregation and an RNN for the the overall result.
+It consists of an MLP for the single-claim score aggregation and an RNN for the overall result.
 
 ```shell
-python3 run_train.py --train-file train_file.jsonl --test-file test_file.jsonl
-python3 run_train_wise.py --train-file train_file.jsonl --test-file test_file.jsonl
+python3 run_train_mlp.py --train-file train_file.jsonl --test-file test_file.jsonl
+python3 run_train_rnn.py --train-file train_file.jsonl --test-file test_file.jsonl
 ```
 
 **Parameters**
