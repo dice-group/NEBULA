@@ -96,7 +96,7 @@ def main():
 
 
 def translate(label):
-    # FIXME
+    # FIXME hard-coded NELA labels
     if label == 0.0:
         return '1'
     elif label == 0.5:

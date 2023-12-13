@@ -180,7 +180,7 @@ def calculate_metrics(true_labels, predicted_labels, class_labels):
 
 
 def translate(label):
-    # FIXME
+    # FIXME hard-coded FEVER labels
     if label == -1:
         return 'REFUTES'
     elif label == 0:
