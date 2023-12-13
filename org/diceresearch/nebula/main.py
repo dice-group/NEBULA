@@ -75,7 +75,7 @@ def check():
 
     # Assign not defined if language is not specified
     if not lang:
-        lang = "nd"
+        lang = "en"
 
     # Assign empty string
     if not translated_text:

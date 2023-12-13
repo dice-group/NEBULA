@@ -14,6 +14,14 @@ conda activate nebula
 pip install -r requirements.txt
 ```
 
+Installing the models needed by the spacy coreference resolution module:
+```
+python -m spacy download en_core_web_lg
+python -m spacy download en_core_web_trf
+python -m coreferee install en
+```
+
+
 ## Running the Application
 To run the application, simply execute the main.py file using the command:
 ```
@@ -37,7 +45,7 @@ For POST requests, the text [text] input and optional language input [lang] shou
 Below are some examples of the POST request.
 
 ```shell
-curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"lang": "en", "text": "Text I want to check"}'
+curl http://nebulavm.cs.upb.de/check --header 'Content-Type: application/json' --data '{"text": "Text I want to check"}'
 ```
 
 Python example:
@@ -46,7 +54,6 @@ import requests
 
 CHECK_URL = "http://nebulavm.cs.upb.de/check"
 input = {
-    'lang': 'en',
     'text': 'Text we want to check'
 }
 req = requests.post(CHECK_URL, json=input)
@@ -56,13 +63,13 @@ req = requests.post(CHECK_URL, json=input)
 For GET requests, the  text [text] input should be passed in the URL arguments along with the optional language input [lang]. 
 Below are some examples of the GET request.
 ```shell
-curl --location 'http://nebulavm.cs.upb.de/check?lang=en&text=Text%20you%20want%20to%20check'
+curl --location 'http://nebulavm.cs.upb.de/check?text=Text%20you%20want%20to%20check'
 ```
 Python example:
 ```python
 import requests
 
-CHECK_URL = "http://nebulavm.cs.upb.de/check?lang=en&text=Text%20we%20want%20to%20check"
+CHECK_URL = "http://nebulavm.cs.upb.de/check?text=Text%20we%20want%20to%20check"
 req = requests.get(CHECK_URL)
 ```
 
@@ -83,7 +90,7 @@ The check method will return a JSON object containing an ID for the text input. 
 Name   | Description
 ------ | ---------------------------------------------
 `text` | The input text to be verified by NEBULA. <br /> **Required**: &#9745;  |             
-`lang` | Language of the input text. <br /> **Effect**: It will translate the text to english if the language is not set to 'en' and a translation hasn't been specified. <br /> **Required**: &#9744; <br /> **Default**: `nd`  |
+`lang` | Language of the input text. <br /> **Effect**: It will translate the text to english if the language is different from 'en' and a translation hasn't been specified. <br /> **Required**: &#9744; <br /> **Default**: `en`  |
 `token` | The device token to notify of an available fact-checking result. <br /> **Effect**: Answer will be sent as push message to the mobile device with this token. <br /> **Required**: &#9744; <br /> **Default**: `None`  |
 `translation` | The english translation of the input text. <br />  **Effect**: The translated text will be used instead of generating an own translation. <br /> **Required**: &#9744; <br /> **Default**: `None`  |                       |
 

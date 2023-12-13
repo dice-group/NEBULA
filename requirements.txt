@@ -42,3 +42,4 @@ tomlkit~=0.12.1
 pyspellchecker~=0.7.2
 tweetnlp==0.4.4 
 language-tool-python==2.7.1
+coreferee==1.4.1
