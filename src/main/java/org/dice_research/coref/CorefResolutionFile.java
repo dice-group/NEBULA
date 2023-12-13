@@ -74,10 +74,8 @@ public class CorefResolutionFile extends CoreferenceResolution {
 		try (BufferedReader br = new BufferedReader(new FileReader(this.destinationPath))) {
 			String line;
 			while ((line = br.readLine()) != null) {
-				String[] fields = line.split(",");
-				if (fields.length > 0) {
-					ids.add(fields[0]);
-				}
+				JSONObject result = new JSONObject(line);
+				ids.add(result.getString("id"));
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
