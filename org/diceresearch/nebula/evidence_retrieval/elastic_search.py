@@ -69,7 +69,6 @@ def retrieve(input, identifier):
                         settings.results_evidenceretrieval_column_status, input_json, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)

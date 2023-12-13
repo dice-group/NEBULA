@@ -120,7 +120,6 @@ def calculate(claims, identifier):
         update_database(settings.sentences, settings.results_stancedetection_column_status, claims_json, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)

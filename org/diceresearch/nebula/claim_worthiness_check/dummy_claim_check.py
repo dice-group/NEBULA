@@ -26,7 +26,6 @@ def check(text, identifier):
                         settings.results_claimworthiness_column_status, dummy_response, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)

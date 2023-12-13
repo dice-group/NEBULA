@@ -54,8 +54,7 @@ def predict(claims, identifier):
         update_database(settings.sentences, settings.results_wiseone_column_status, claims_json, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)
 
@@ -89,8 +88,7 @@ def predict_rnn(json, identifier):
                                     veracity_label, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)
 
