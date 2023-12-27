@@ -4,11 +4,11 @@ import threading
 from datetime import datetime
 
 from claim_worthiness_check import dummy_claim_check, claim_buster
-from coref_resolution import coreference_resolution
 from database import databasemanager
 from evidence_retrieval import elastic_search
 import settings
 from exception_handling.exceptions import UnsupportedStage
+from org.diceresearch.nebula.coref_resolution import spacy_coref
 from stance_detection import cosine_similarity
 from translation import neamt_translator
 from indicators.main import run_indicator_check_text
@@ -77,7 +77,7 @@ def goNextLevel(identifier):
 
     elif next_stage == 2:
         logging.debug("Coreference resolution")
-        coreference_resolution.send_coref_request(translated_text, identifier)
+        spacy_coref.replace_corefs(translated_text, identifier)
 
     elif next_stage == 3:
         logging.debug("Claim check")
