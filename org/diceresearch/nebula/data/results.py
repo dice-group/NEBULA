@@ -1,8 +1,35 @@
 import json
 
 """
-    This file contains all the result formats the service outputs.
+    This file contains the result formats the service components output.
 """
+
+
+class Evidence:
+    """
+    Evidence as retrieved by the evidence retrieval and the stance detection modules.
+
+    Example:
+    {
+        "text": "This is an evidence for claim 0.",
+        "url": "www.evidenceclaim0.com",
+        "elastic_score": 0.2,
+        "stance_score": 1
+    }
+
+    """
+    def __init__(self, evidence_text, url, elastic_score, stance_score=None):
+        """
+        Constructor.
+        :param evidence_text: Evidence text. Provided by the ER module.
+        :param url: Evidence URL. Provided by the ER module.
+        :param elastic_score: Elastic Search score. Provided by the ER module.
+        :param stance_score: Stance score Provided by the SD module.
+        """
+        self.evidence_text = evidence_text
+        self.url = url
+        self.elastic_score = elastic_score
+        self.stance_score = stance_score
 
 
 class Result(object):
@@ -20,89 +47,56 @@ class Result(object):
             return json.dumps(ob, default=vars)
 
 
-class ClaimCheckResult(Result):
-    """
-        Claim check result format
-    """
-
-    def __init__(self, version: str, text: str, sentences: list):
-        super().__init__()
-        self.version = version
-        self.sentences = text
-        self.results = sentences
-
-
-
 class Sentence(Result):
     """
-        Sentence with corresponding index in the overall text
+        Sentences with claim index, claim text, score and found evidences.
+
+        Example:
+        {
+            "index": 0,
+            "text": "This is an example.",
+            "score": 0,
+            "wise_score": 1,
+            "evidences": [
+				{
+                    "text": "This is an evidence for claim 0.",
+                    "url": "www.evidenceclaim0.com",
+                    "elastic_score": 0.2,
+                    "stance_score": 1
+                }
+            ]
+        }
     """
-    def __init__(self, text: str, index: int, score: float):
-        self.text = text
+    def __init__(self, index: int, text: str, score: float, wise_score=None, evidences=None):
+        """
+        Constructor.
+        :param index: Claim index. Provided by the CC module.
+        :param text: Claim text. Provided by the CC module.
+        :param score: Claim score. Provided by the CC module.
+        :param wise_score: Wise score. Provided by the first module of WISE.
+        :param evidences: Evidences. Provided by the ER, SD and VD modules.
+        """
         self.index = index
-        self.score = score
-
-
-class QueryResult(object):
-    """
-        Query result format
-    """
-    def __init__(self, result: str, query: str):
-        self.result = result
-        self.query = query
-
-
-class EvidenceRetrievalResult(Result):
-    """
-        Evidence retrieval result format
-    """
-    def __init__(self, evidences=None):
-        if evidences:
-            self.evidences=evidences
-        else:
-            self.evidences = list()
-
-    def add(self, query_result: QueryResult):
-        self.evidences.append(query_result)
-
-
-class Stance(object):
-    """
-        Single stance result format
-    """
-    def __init__(self, claim: str, text: str, url: str, elastic_score: float, stance_score: float):
-        self.claim = claim
         self.text = text
-        self.url = url
-        self.elastic_score = elastic_score
-        self.stance_score = stance_score
-
-
-class StanceDetectionResult(Result):
-    """
-        Stance detection result format
-    """
-    def __init__(self, stances=None):
-        if stances:
-            self.stances=stances
-        else:
-            self.stances = list()
-
-    def add_stance(self, stance: Stance):
-        self.stances.append(stance)
-
-    def add(self, claim: str, text: str, url: str, elastic_score: float, stance_score: float):
-        self.stances.append(Stance(claim, text, url, elastic_score, stance_score))
+        self.score = score
+        self.wise_score = wise_score
+        self.evidences = evidences
 
 
 class Provenance(object):
     """
         Provenance information
     """
-    def __init__(self, check_timestamp, knowledge_date, model_date):
-        self.check_timestamp = check_timestamp
+    def __init__(self, knowledge_date, model_date, final_model_date):
+        """
+        Constructor.
+        :param knowledge_date: Knowledge base last modified date
+        :param model_date: WISE's first step model last trained date
+        :param final_model_date: WISE final step model last trained date
+        """
         self.knowledge_date = knowledge_date
         self.model_date = model_date
+        self.final_model_date = final_model_date
 
 
 class ResponseStatus(Result):
@@ -114,19 +108,3 @@ class ResponseStatus(Result):
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             self.__dict__[key] = value
-
-
-class Status(Result):
-    """
-        Response status for the /status query
-    """
-
-    def __init__(self, id, status, text, lang, veracity_label, veracity_score, explanation, provenance: Provenance):
-        self.id = id
-        self.status = status
-        self.lang = lang
-        self.text = text
-        self.veracity_label = veracity_label
-        self.veracity_score = veracity_score
-        self.explanation = explanation
-        self.provenance = provenance
