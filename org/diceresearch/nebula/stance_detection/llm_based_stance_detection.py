@@ -6,7 +6,7 @@ import threading
 import orchestrator
 import settings
 import nltk
-
+import requests
 from utils.database_utils import log_exception, update_database
 
 nltk.download('punkt')
