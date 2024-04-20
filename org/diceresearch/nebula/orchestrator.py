@@ -9,7 +9,7 @@ from evidence_retrieval import elastic_search
 import settings
 from exception_handling.exceptions import UnsupportedStage
 from org.diceresearch.nebula.coref_resolution import spacy_coref
-from stance_detection import cosine_similarity
+from stance_detection import cosine_similarity, llm_based_stance_detection
 from translation import neamt_translator
 from indicators.main import run_indicator_check_text
 from utils.util import SetEncoder
@@ -93,7 +93,7 @@ def goNextLevel(identifier):
 
     elif next_stage == 5:
         logging.debug("Stance detection")
-        cosine_similarity.calculate(claims, identifier)
+        llm_based_stance_detection.calculate(claims, identifier)
 
     elif next_stage == 6:
         logging.debug('Query the trained model')
