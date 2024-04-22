@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
 import numpy as np
-import pandas as pd
 
 
 class NumberAggregator(ABC):
@@ -30,6 +29,9 @@ class SumAggregator(NumberAggregator):
 
 
 class NumberAggregatorFactory:
+    """
+    Factory of aggregator objects
+    """
     @staticmethod
     def create_aggregator(implementation):
         if implementation == 'mean':
@@ -42,13 +44,10 @@ class NumberAggregatorFactory:
 
 class AggregationProcessor:
     """
-
+    Computes the aggregation based on the implementation type desired
     """
-    def __init__(self, json_data):
-        df = pd.read_json(json_data, orient='index')['wise_score']
-        self.data = df.values
+    def __init__(self, implementation):
+        self.aggregator = NumberAggregatorFactory.create_aggregator(implementation)
 
-    def process(self, implementation):
-        aggregator = NumberAggregatorFactory.create_aggregator(implementation)
-        result = aggregator.aggregate(self.data)
-        return result
+    def process(self, data):
+        return self.aggregator.aggregate(data)

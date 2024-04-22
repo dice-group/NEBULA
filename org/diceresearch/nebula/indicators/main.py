@@ -3,7 +3,7 @@ from pprint import pprint
 from typing import Any
 import tomlkit
 from tomlkit import load
-from layout_and_formal import *
+from indicators.layout_and_formal import *
 
 # ToDo Import check_for_excessive_capitalization, check_for_excessive_emojis, check_for_excessive_hashtags,
 #  check_for_incorrect_spelling
@@ -11,7 +11,7 @@ from layout_and_formal import *
 # ToDo Save Json
 
 
-CONFIG_PATH: str = "./config.toml"
+CONFIG_PATH: str = "indicators/config.toml"
 
 
 def load_config() -> tomlkit.TOMLDocument:
@@ -84,6 +84,13 @@ def run_indicator_check(json_input: Any):
     json_output["indicators"]["layout_and_formal"] = layout_and_formal_results
 
     return json_output
+
+def run_indicator_check_text(input_text: Any):
+    config = load_config()
+    layout_and_formal_results = _run_layout_and_formal_checks(
+        input_text=input_text, config=config
+    )
+    return layout_and_formal_results
 
 
 if __name__ == "__main__":

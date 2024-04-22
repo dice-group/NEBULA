@@ -1,17 +1,20 @@
 import json
-import logging
 import threading
 
 import pandas as pd
 
-import databasemanager
-import httpmanager
+from database import httpmanager
 import orchestrator
 import settings
+from utils.database_utils import log_exception, update_database_json
 
 
 def check(text, identifier):
     try:
+        # input check
+        if not text:
+            raise ValueError('The claim check input is empty')
+
         # /api/v2/score/text/sentences/<input_text>
         api_key = settings.claimbuster_apikey
         input_claim = text
@@ -30,16 +33,15 @@ def check(text, identifier):
         if len(results) > settings.claim_limit:
             results = results.sort_values('score', ascending=False).head(settings.claim_limit)
 
+        # reorder columns
+        cols = ['index', 'text', 'score']
+        results = results[cols]
+
         # save in the database
-        databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_name,
-                                    results.to_json(orient='records'), identifier)
-        databasemanager.update_step(settings.results_table_name, settings.results_claimworthiness_column_status,
-                                    settings.completed, identifier)
-        databasemanager.increase_the_stage(settings.results_table_name, identifier)
+        update_database_json(settings.sentences, settings.results_claimworthiness_column_status,
+                        results.to_json(orient='records'), identifier)
+
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
-        logging.exception(e)
-        databasemanager.update_step(settings.results_table_name, settings.status, settings.error, identifier)
-        databasemanager.update_step(settings.results_table_name, settings.error_msg, str(e), identifier)
+        log_exception(e, identifier)
