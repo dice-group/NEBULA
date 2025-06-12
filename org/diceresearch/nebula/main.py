@@ -12,18 +12,38 @@ from data.results import ResponseStatus, Status, Provenance
 from utils.util import trim, translate_to_classes
 from veracity_detection import predictions
 
+from flasgger import Swagger 
+
 app = Flask(__name__)
 fileConfig(settings.logging_config)
+
+
+app.config['SWAGGER'] = {
+    'title': 'NEBULA API',
+    'uiversion': 3,
+    'description': 'API for the NEBULA fact-checking system.'
+}
+
+swagger = Swagger(app)
 
 
 @app.route('/test')
 @app.route('/default')
 def test():
+    """Endpoint to test if the API is up.
+    ---
+    tags:
+      - Test
+    responses:
+      200:
+        description: API is up.
+        schema:
+          type: object
+          properties:
+            status:
+              type: string
+              example: OK
     """
-        Tests if the endpoint is up
-
-        :return: An OK status message
-        """
     return ResponseStatus(status="OK").__dict__
 
 
@@ -51,7 +71,41 @@ def check():
         Checks a text for veracity.
         If the language is not specified, or any other than en is specified, the text will be translated to english first.
         If the text is not specified, it will return an Error.
-
+    ---
+    tags:
+      - Fact-Checking
+    parameters:
+      - name: body
+        in: body
+        required: true
+        schema:
+          id: CheckInput
+          required:
+            - text
+          properties:
+            text:
+              type: string
+              description: The claim/text to be fact-checked.
+              example: "The Eiffel Tower is in Berlin."
+            lang:
+              type: string
+              description: The language of the text (e.g., 'en', 'de'). Defaults to 'nd' (not defined) if omitted.
+              example: "en"
+    responses:
+      200:
+        description: Successfully started the fact-checking process.
+        schema:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique identifier for this fact-checking request.
+              example: "a1b"
+            status:
+              type: string
+              example: "OK"
+      400:
+        description: Bad Request - The 'text' parameter was not provided in the JSON body.
         :return: ID of the text to be fact checked
     """
     # parse arguments
@@ -110,8 +164,44 @@ def do_mapping(result):
 @app.route('/status', methods=['GET', 'POST'])
 def status():
     """
-    Outputs selected fields
-    :return:
+    Use the ID obtained from the /check endpoint to output selected fields.
+    ---
+    tags:
+      - Fact-Checking
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: The unique identifier for the fact-checking request.
+    responses:
+      200:
+        description: The current status and result of the request.
+        schema:
+          id: StatusOutput
+          properties:
+            id:
+              type: string
+            status:
+              type: string
+              description: "The current stage of the pipeline (e.g., 'Completed', 'In-Progress')."
+            text:
+              type: string
+            lang:
+              type: string
+            veracity_label:
+              type: string
+              description: "The final veracity label (e.g., 'True', 'False', 'Uncertain')."
+            veracity_score:
+              type: number
+            explanation:
+              type: string
+            provenance:
+              type: object
+      400:
+        description: Bad Request - The 'id' parameter was not provided.
+      404:
+        description: Not Found - No result found for the given ID.
     """
 
     # parse arguments
@@ -134,9 +224,24 @@ def status():
 
 @app.route('/rawstatus', methods=['GET', 'POST'])
 def raw_status():
-    """
-    Outputs everything in the result
-    :return:
+    """ 
+    Use the ID obtained from the /check endpoint to output everything in the result.
+    ---
+    tags:
+      - Debugging
+    parameters:
+      - name: id
+        in: query
+        type: string
+        required: true
+        description: The unique identifier for the fact-checking request.
+    responses:
+      200:
+        description: The complete, raw database entry for the request.
+      400:
+        description: Bad Request - The 'id' parameter was not provided.
+      404:
+        description: Not Found - No result found for the given ID.
     """
 
     # parse arguments
@@ -160,6 +265,23 @@ def raw_status():
 
 @app.route('/textsearch', methods=['GET', 'POST'])
 def textsearch():
+
+    """Search the database for previous fact-checks of a given text.
+    ---
+    tags:
+      - Searching
+    parameters:
+      - name: text
+        in: query
+        type: string
+        required: true
+        description: The text to search for in the database.
+    responses:
+      200:
+        description: A list of results matching the text.
+      404:
+        description: Not Found - Nothing found with this text.
+    """
 
     # parse arguments
     if request.method == 'GET':
