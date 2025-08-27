@@ -8,10 +8,11 @@ from database import databasemanager
 from evidence_retrieval import elastic_search
 import settings
 from exception_handling.exceptions import UnsupportedStage
-from org.diceresearch.nebula.coref_resolution import spacy_coref
+# from org.diceresearch.nebula.coref_resolution import spacy_coref
+from coref_resolution import coreference_resolution
 from stance_detection import cosine_similarity, llm_based_stance_detection
 from translation import neamt_translator
-from indicators.main import run_indicator_check_text
+from indicators.main import run_indicator_check_api
 from utils.util import SetEncoder
 from veracity_detection import predictions
 
@@ -77,7 +78,8 @@ def goNextLevel(identifier):
 
     elif next_stage == 2:
         logging.debug("Coreference resolution")
-        spacy_coref.replace_corefs(translated_text, identifier)
+        # spacy_coref.replace_corefs(translated_text, identifier)
+        coreference_resolution.send_coref_request(translated_text, identifier)
 
     elif next_stage == 3:
         logging.debug("Claim check")
@@ -107,7 +109,7 @@ def goNextLevel(identifier):
         logging.debug('Run indicator check')
         # run indicators if label is false
         if veracity_label == settings.false_label:
-            indicators = run_indicator_check_text(input_text)
+            indicators = run_indicator_check_api(current)
             status = settings.completed
             indicator_json = json.dumps(indicators, cls=SetEncoder)
             databasemanager.update_json_step(settings.results_table_name, settings.results_indicator_check,

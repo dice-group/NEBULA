@@ -6,6 +6,7 @@ cycler==0.11.0
 elastic-transport==8.4.0
 elasticsearch==8.7.0
 Flask==2.2.3
+flasgger==0.9.7.1
 fonttools==4.39.3
 idna==3.4
 importlib-metadata==6.4.1
@@ -41,5 +42,7 @@ firebase-admin==6.2.0
 tomlkit~=0.12.1
 pyspellchecker~=0.7.2
 tweetnlp==0.4.4 
-language-tool-python==2.7.1
+language-tool-python==2.9.4
 coreferee==1.4.1
+openai==1.97.1
+

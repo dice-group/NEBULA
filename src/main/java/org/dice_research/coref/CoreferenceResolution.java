@@ -2,7 +2,6 @@ package org.dice_research.coref;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -38,11 +37,12 @@ public class CoreferenceResolution {
 	public CoreferenceResolution() {
 		props = new Properties();
 		props.setProperty("annotators", "tokenize,ssplit,pos,lemma,ner,parse,dcoref");
+
 	}
 
 	/**
 	 * Escapes double quotes.
-	 * 
+	 *
 	 * @param input String to be escaped
 	 * @return Escaped input string
 	 */
@@ -53,7 +53,7 @@ public class CoreferenceResolution {
 	/**
 	 * Adds spaces to periods without spaces and replaces new lines with single
 	 * spaces.
-	 * 
+	 *
 	 * @param input
 	 * @return
 	 */
@@ -63,7 +63,7 @@ public class CoreferenceResolution {
 
 	/**
 	 * Creates a JSONObject from an input string.
-	 * 
+	 *
 	 * @param input
 	 * @return
 	 */
@@ -79,53 +79,137 @@ public class CoreferenceResolution {
 
 	/**
 	 * Replaces mentions with the coreferenced equivalents.
-	 * 
+	 *
 	 * @param sentence     Input document
 	 * @param corefChains  Coreferences
 	 * @param document     Annotated document
 	 * @param sentence_num Number of sentences
 	 * @return Coreferenced input sentence
 	 */
-	private String replaceMentions(CoreMap sentence, Map<Integer, CorefChain> corefChains, Annotation document,
-			Integer sentence_num) {
-		// Create a copy of the original sentence text
-		String modifiedSentence = sentence.toString();
-		int start_index = 0;
-		int end_index = 0;
-		HashMap<String, List<Object>> corefs = new HashMap<>();
-		HashMap<String, List<Object>> start_coref = new HashMap<>();
-		HashMap<String, List<Object>> end_coref = new HashMap<>();
-		HashMap<String, List<Object>> mentionSpan = new HashMap<>();
-		for (CorefChain corefChain : corefChains.values()) {
-			if (((HashSet) (corefChain.getMentionMap().values()).toArray()[0]).size() > 1) {
-				for (Object coref1 : ((HashSet) (corefChain.getMentionMap().values()).toArray()[0])) {
-					CorefChain.CorefMention representativeMention = corefChain.getRepresentativeMention();
-					if (coref1 == representativeMention) {
-						// mentionSpan.add(representativeMention.mentionSpan);
-					} else {
-						if (((CorefChain.CorefMention) coref1).sentNum == sentence_num + 1) {
-							start_index = ((CorefChain.CorefMention) coref1).startIndex;
-							end_index = ((CorefChain.CorefMention) coref1).endIndex;
-							addIntegerToMap(mentionSpan, representativeMention.mentionSpan,
-									representativeMention.mentionSpan);
-							addIntegerToMap(start_coref, representativeMention.mentionSpan, start_index);
-							addIntegerToMap(end_coref, representativeMention.mentionSpan, end_index);
-							addIntegerToMap(corefs, representativeMention.mentionSpan, coref1);
-						}
-					}
-				}
-			}
-		}
+    private String replaceMentions(CoreMap sentence, Map<Integer, CorefChain> corefChains, Annotation document,
+                                   Integer sentence_num) {
+        List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+        StringBuilder modifiedSentence = new StringBuilder();
+        int tokenIndex = 0;
 
-		if (corefs.size() > 0) {
-			modifiedSentence = replaceSubstring(corefs, start_coref, end_coref, sentence);
-		}
-		return modifiedSentence;
-	}
+        while (tokenIndex < tokens.size()) {
+            CoreLabel token = tokens.get(tokenIndex);
+            String originalText = token.originalText();
+            String replacementText = null;
+
+            // Determine if current token is part of a mention
+            for (CorefChain corefChain : corefChains.values()) {
+                CorefChain.CorefMention representativeMention = corefChain.getRepresentativeMention();
+
+                for (CorefChain.CorefMention mention : corefChain.getMentionsInTextualOrder()) {
+                    if (mention.sentNum == sentence_num + 1 && mention.startIndex == tokenIndex + 1) {
+                        replacementText = representativeMention.mentionSpan;
+                        tokenIndex = mention.endIndex - 1;  // Adjust token index to skip the entire mention span
+                        break;
+                    }
+                }
+                if (replacementText != null) break;
+            }
+
+            // Append the replacement or original text
+            if (replacementText != null) {
+                appendWithSpace(modifiedSentence, replacementText);
+            } else {
+                appendWithSpace(modifiedSentence, originalText);
+            }
+
+            modifiedSentence.append(token.after());  // Preserve punctuation and spaces
+            tokenIndex++;
+        }
+
+        return modifiedSentence.toString().trim();
+    }
+
+    private void appendWithSpace(StringBuilder builder, String text) {
+        if (!builder.toString().endsWith(" ")) {
+            builder.append(" ");
+        }
+        builder.append(text);
+    }
+//	 private String replaceMentions(CoreMap sentence, Map<Integer, CorefChain> corefChains, Annotation document,
+//      Integer sentence_num) {
+//           List<CoreLabel> tokens = sentence.get(CoreAnnotations.TokensAnnotation.class);
+//           StringBuilder modifiedSentence = new StringBuilder();
+//           int tokenIndex = 0;
+//
+//           while (tokenIndex < tokens.size()) {
+//              CoreLabel token = tokens.get(tokenIndex);
+//              String originalText = token.originalText();
+//              String replacementText = null;
+//
+//              // Check each coref chain to see if the current token is part of any mention that should be replaced
+//              for (CorefChain corefChain : corefChains.values()) {
+//                 CorefChain.CorefMention representativeMention = corefChain.getRepresentativeMention();
+//
+//                 // Iterate over mentions to find if current token is the start of one
+//                 for (CorefChain.CorefMention mention : corefChain.getMentionsInTextualOrder()) {
+//                    if (mention.sentNum == sentence_num + 1 && mention.startIndex == tokenIndex + 1) {
+//                       // Found a mention starting here; replace from start to end with the representative
+//                       replacementText = representativeMention.mentionSpan;
+//                       tokenIndex = mention.endIndex - 1;  // Skip past this mention
+//                       break;
+//                    }
+//                 }
+//                 if (replacementText != null) break; // No need to check further once we've replaced
+//              }
+//
+//              if (replacementText != null) {
+//                 modifiedSentence.append(replacementText);
+//              } else {
+//                 modifiedSentence.append(originalText);
+//              }
+//
+//              modifiedSentence.append(token.after());
+//              tokenIndex++;
+//           }
+//
+//           return modifiedSentence.toString().trim();
+//        }
+// 	private String replaceMentions(CoreMap sentence, Map<Integer, CorefChain> corefChains, Annotation document,
+// 			Integer sentence_num) {
+// 		// Create a copy of the original sentence text
+// 		String modifiedSentence = sentence.toString();
+// 		int start_index = 0;
+// 		int end_index = 0;
+// 		HashMap<String, List<Object>> corefs = new HashMap<>();
+// 		HashMap<String, List<Object>> start_coref = new HashMap<>();
+// 		HashMap<String, List<Object>> end_coref = new HashMap<>();
+// 		HashMap<String, List<Object>> mentionSpan = new HashMap<>();
+// 		for (CorefChain corefChain : corefChains.values()) {
+// 			if (((HashSet) (corefChain.getMentionMap().values()).toArray()[0]).size() > 1) {
+// 				for (Object coref1 : ((HashSet) (corefChain.getMentionMap().values()).toArray()[0])) {
+// 					CorefChain.CorefMention representativeMention = corefChain.getRepresentativeMention();
+// 					if (coref1 == representativeMention) {
+// 						// mentionSpan.add(representativeMention.mentionSpan);
+// 					} else {
+// 						if (((CorefChain.CorefMention) coref1).sentNum == sentence_num + 1) {
+// 							start_index = ((CorefChain.CorefMention) coref1).startIndex;
+// 							end_index = ((CorefChain.CorefMention) coref1).endIndex;
+// 							addIntegerToMap(mentionSpan, representativeMention.mentionSpan,
+// 									representativeMention.mentionSpan);
+// 							addIntegerToMap(start_coref, representativeMention.mentionSpan, start_index);
+// 							addIntegerToMap(end_coref, representativeMention.mentionSpan, end_index);
+// 							addIntegerToMap(corefs, representativeMention.mentionSpan, coref1);
+// 						}
+// 					}
+// 				}
+// 			}
+// 		}
+//
+// 		if (corefs.size() > 0) {
+// 			modifiedSentence = replaceSubstring(corefs, start_coref, end_coref, sentence);
+// 		}
+// 		return modifiedSentence;
+// 	}
 
 	/**
 	 * Removes square brackets from string
-	 * 
+	 *
 	 * @param input Input string
 	 * @return String without starting and ending brackets
 	 */
@@ -138,7 +222,7 @@ public class CoreferenceResolution {
 
 	/**
 	 * Adds integer to a list in map values if key is existing, otherwise creates it
-	 * 
+	 *
 	 * @param map   Map to add to
 	 * @param key   Map key
 	 * @param value Map value - The integer
@@ -158,7 +242,7 @@ public class CoreferenceResolution {
 
 	/**
 	 * Replaces substrings
-	 * 
+	 *
 	 * @param corefs
 	 * @param startIndex
 	 * @param endIndex
@@ -206,7 +290,7 @@ public class CoreferenceResolution {
 
 	/**
 	 * Sorts Multimap descendingly by value
-	 * 
+	 *
 	 * @param map Map to be sorted
 	 * @return Sorted Map
 	 */
@@ -231,7 +315,7 @@ public class CoreferenceResolution {
 	/**
 	 * Does coref resolution and then, replaces the mentions with the corefer'd
 	 * version.
-	 * 
+	 *
 	 * @param input String to annotate
 	 * @return Coreferenced input
 	 */
@@ -248,7 +332,7 @@ public class CoreferenceResolution {
 	/**
 	 * Generates the coreferenced text by replacing the coreferenced spans in the
 	 * document.
-	 * 
+	 *
 	 * @param text     Input text
 	 * @param document Annotated document
 	 * @return
