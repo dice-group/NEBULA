@@ -1,6 +1,6 @@
 package org.dice_research.config;
 
-import org.dice_research.coref.CoreferenceResolution;
+import org.dice_research.coref.CoreferenceResolution2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -17,7 +17,7 @@ public class RESTController {
 	ApplicationContext ctx;
 	
 	@Autowired
-	CoreferenceResolution coref;
+	CoreferenceResolution2 coref;
 
 	@GetMapping("/test")
 	public String ping() {

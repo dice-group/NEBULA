@@ -63,16 +63,16 @@ stancedetection_api = "http://localhost:8001/check/"
 
 # WISE options
 trained_model = "./resources/model_130723.pt"
-model_timestamp = "2023-07-13"  # WISE model last trained date
+model_timestamp = "2024-09-15"  # WISE model last trained date
 low_threshold = 0.66  # Thresholds to be used in case of regression model
 high_threshold = 0.69
 class_labels = ['REFUTED', 'NOT ENOUGH INFO', 'SUPPORTED']  # fever labels
 
 # Final WISE step options
 rnn_model = "./resources/model_rnn_061223.pt"
-final_model_timestamp = "2023-12-06"
-final_low_threshold = 0.46  # Thresholds to be used in case of regression model
-final_high_threshold = 0.47
+final_model_timestamp = "2024-09-15"
+final_low_threshold = 0.37  # Thresholds to be used in case of regression model
+final_high_threshold = 0.43
 final_class_labels = ['UNRELIABLE', 'MIXED', 'RELIABLE']  # nela labels
 false_label = 'UNRELIABLE'
 
