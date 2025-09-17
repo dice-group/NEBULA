@@ -4,7 +4,18 @@ from database import httpmanager
 import orchestrator
 import settings
 from utils.database_utils import update_database, log_exception
+from utils.llm_query import LLMQueryClass
 
+def calculate_coref_using_api_call(maintext, identifier):
+    stanceDetector = LLMQueryClass()
+    result = stanceDetector.get_coref_res_from_api_call(maintext)
+    # result = answer.replace("\n", " ")
+    # save the result in database
+    update_database(settings.results_coref_column_name,
+                    settings.results_coref_column_status, result, identifier)
+
+    # go next level
+    orchestrator.goNextLevel(identifier)
 
 def send_coref_request(text, identifier):
     """

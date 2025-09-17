@@ -17,6 +17,7 @@ results_coref_column_status = "COREF_TEXT_STATUS"
 results_claimworthiness_column_status = "CLAIM_CHECK_WORTHINESS_RESULT_STATUS"
 results_evidenceretrieval_column_status = "EVIDENCE_RETRIEVAL_RESULT_STATUS"
 results_stancedetection_column_status = "STANCE_DETECTION_RESULT_STATUS"
+results_summary_column_status = "SUMMARY_RESULT_STATUS"
 results_wiseone_column_status = "WISE_ONE_RESULT_STATUS"
 results_wise_final_column_name = "WISE_FINAL_RESULT"
 results_wise_final_column_status = "WISE_FINAL_RESULT_STATUS"
@@ -45,13 +46,18 @@ translatorEndpoint = "http://neamt.cs.upb.de:6100/custom-pipeline"
 translator = "opus_mt"
 
 # Coreference resolution
-coref_endpoint = "http://nebulavm2-bullseye.cs.upb.de:9090/validate"
+coref_endpoint = "http://localhost:9090/validate"
+coref_llms = "True"
 
 # claim check options
 module_claimworthiness = "claimbuster"
-claimbuster_apikey = os.getenv("API_KEY")
+claimbuster_apikey = "2328ee7e3d794996a3f50ef058ac97d9" #os.getenv("API_KEY")
 claimbuster_api_endpoint = "https://idir.uta.edu/claimbuster/api/v2/score/text/sentences/"
-claim_limit=10
+claim_limit=5
+
+BASE_LLM_URL = 'https://dice-llm-chat.cs.uni-paderborn.de/api'
+LLM_API_KEY = "sk-69cb04477beb4330b0ec2ed676688856"
+MODEL_NAME = "llama-4-scout"
 
 # Evidence retrieval options
 elasticsearch_index_name = "nebula"

@@ -1,6 +1,5 @@
 import json
 import logging
-import threading
 from datetime import datetime
 
 from claim_worthiness_check import dummy_claim_check, claim_buster
@@ -10,11 +9,11 @@ import settings
 from exception_handling.exceptions import UnsupportedStage
 # from org.diceresearch.nebula.coref_resolution import spacy_coref
 from coref_resolution import coreference_resolution
-from stance_detection import cosine_similarity, llm_based_stance_detection
+from utils import llm_based_final_classification
+from evidence_retrieval import llm_based_summary
 from translation import neamt_translator
 from indicators.main import run_indicator_check_api
 from utils.util import SetEncoder
-from veracity_detection import predictions
 
 from utils import notification
 
@@ -79,7 +78,10 @@ def goNextLevel(identifier):
     elif next_stage == 2:
         logging.debug("Coreference resolution")
         # spacy_coref.replace_corefs(translated_text, identifier)
-        coreference_resolution.send_coref_request(translated_text, identifier)
+        if settings.coref_llms== "True":
+            coreference_resolution.calculate_coref_using_api_call(translated_text, identifier)
+        else:
+            coreference_resolution.send_coref_request(translated_text, identifier)
 
     elif next_stage == 3:
         logging.debug("Claim check")
@@ -94,16 +96,24 @@ def goNextLevel(identifier):
         elastic_search.retrieve(claims, identifier)
 
     elif next_stage == 5:
-        logging.debug("Stance detection")
-        llm_based_stance_detection.calculate(claims, identifier)
+        logging.debug("Summary retrieval")
+        llm_based_summary.generate(claims, identifier)
 
     elif next_stage == 6:
-        logging.debug('Query the trained model')
-        predictions.predict(claims, identifier)
+        logging.debug("LLM based single claims classification")
+        llm_based_final_classification.calculate(claims, identifier)
 
     elif next_stage == 7:
-        logging.debug('Query the trained RNN model')
-        predictions.predict_mean(claims, identifier)
+        logging.debug("final LLM based classification")
+        llm_based_final_classification.calculate_final_decision(claims, coref_text, identifier)
+
+    # elif next_stage == 8:
+    #     logging.debug('Query the trained model')
+    #     predictions.predict(claims, identifier)
+    #
+    # elif next_stage == 9:
+    #     logging.debug('Query the trained RNN model')
+    #     predictions.predict_mean(claims, identifier)
 
     elif next_stage == 8:
         logging.debug('Run indicator check')

@@ -2,7 +2,27 @@ import logging
 import sqlite3
 import settings
 
+def drop_results_table():
+    """
+    Drops the RESULTS table if it exists.
+    ⚠️ WARNING: This will delete all data in the table!
+    """
+    try:
+        conn = sqlite3.connect(settings.database_name)
+        cur = conn.cursor()
 
+        cur.execute(f"DROP TABLE IF EXISTS {settings.results_table_name};")
+
+        conn.commit()
+        logging.info(f"🗑️ Table {settings.results_table_name} dropped successfully.")
+
+    except sqlite3.Error as error:
+        print(f"❌ Error while dropping table {settings.results_table_name}:", error)
+
+    finally:
+        if conn:
+            conn.close()
+            logging.info("🔒 SQLite connection is closed")
 def create_database_if_not_exists():
     """
     Creates the database if it doesn't exist already
@@ -23,6 +43,7 @@ def create_database_if_not_exists():
                  {settings.results_claimworthiness_column_status}     TEXT,
                  {settings.results_evidenceretrieval_column_status}     TEXT,
                  {settings.results_stancedetection_column_status}     TEXT,
+                 {settings.results_summary_column_status}     TEXT,
                  {settings.results_wiseone_column_status} TEXT,
                  {settings.results_wise_final_column_status} TEXT,
                  {settings.sentences}     TEXT,
