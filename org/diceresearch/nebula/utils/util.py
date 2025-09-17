@@ -34,7 +34,7 @@ def get_optimal_thresholds(thresholds_range, classes, scores, true_labels):
             if f1 > best_f1:
                 best_f1 = f1
                 best_thresholds = (threshold1, threshold2)
-                logging.debug('Current best macro F1-score {0} with thresholds {1}'.format(best_f1, best_thresholds))
+                logging.info('Current best macro F1-score {0} with thresholds {1}'.format(best_f1, best_thresholds))
     return best_thresholds
 
 
@@ -61,7 +61,7 @@ def read_jsonl_from_file(file):
     :param file: path
     :return: list of JSON objects
     """
-    with open(file, 'r') as json_file:
+    with open(file, 'r', encoding='utf-8') as json_file:
         return [json.loads(line) for line in json_file]
 
 
@@ -101,3 +101,10 @@ class Tape:
 
     def get(self, i):
         return self.r[i]
+
+
+class SetEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, set):
+            return list(obj)
+        return super(SetEncoder, self).default(obj)
