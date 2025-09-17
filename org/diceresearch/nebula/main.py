@@ -9,7 +9,7 @@ from flask import Flask, request, Response, jsonify
 
 import settings
 from data.results import ResponseStatus, Provenance
-from database.initiatedatabase import create_database_if_not_exists
+from database.initiatedatabase import create_database_if_not_exists, drop_results_table
 from utils.util import trim
 
 from flasgger import Swagger
@@ -333,6 +333,8 @@ def textsearch():
 
 
 if __name__ == '__main__':
+    # drop table for first time
+    # drop_results_table()
     create_database_if_not_exists()
     # app.run(host='0.0.0.0', port=8080)
     app.run(host='0.0.0.0',port=5000)

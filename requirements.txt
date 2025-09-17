@@ -6,6 +6,7 @@ cycler==0.11.0
 elastic-transport==8.4.0
 elasticsearch==8.7.0
 Flask==2.2.3
+setuptools==44.1.1
 flasgger==0.9.7.1
 fonttools==4.39.3
 idna==3.4
