@@ -47,17 +47,18 @@ translator = "opus_mt"
 
 # Coreference resolution
 coref_endpoint = "http://localhost:9090/validate"
-coref_llms = "True"
+coref_by_llms_or_local = "llm"
 
 # claim check options
 module_claimworthiness = "claimbuster"
 claimbuster_apikey = "2328ee7e3d794996a3f50ef058ac97d9" #os.getenv("API_KEY")
 claimbuster_api_endpoint = "https://idir.uta.edu/claimbuster/api/v2/score/text/sentences/"
-claim_limit=5
+claim_limit=10
 
-BASE_LLM_URL = 'https://dice-llm-chat.cs.uni-paderborn.de/api'
+# BASE_LLM_URL = 'https://dice-llm-chat.cs.uni-paderborn.de/api'
+BASE_LLM_URL = 'http://localhost:8002/v1/chat/completions'
 LLM_API_KEY = "sk-69cb04477beb4330b0ec2ed676688856"
-MODEL_NAME = "llama-4-scout"
+MODEL_NAME = "mistralai/Mistral-7B-Instruct-v0.3"
 
 # Evidence retrieval options
 elasticsearch_index_name = "nebula"

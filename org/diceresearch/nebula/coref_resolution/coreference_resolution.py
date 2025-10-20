@@ -4,10 +4,10 @@ from database import httpmanager
 import orchestrator
 import settings
 from utils.database_utils import update_database, log_exception
-from utils.llm_query import LLMQueryClass
+from utils.llm_query import get_llm_instance
 
 def calculate_coref_using_api_call(maintext, identifier):
-    stanceDetector = LLMQueryClass()
+    stanceDetector = get_llm_instance()
     result = stanceDetector.get_coref_res_from_api_call(maintext)
     # result = answer.replace("\n", " ")
     # save the result in database

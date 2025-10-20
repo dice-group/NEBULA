@@ -8,7 +8,7 @@ import nltk
 from utils.database_utils import log_exception, update_database
 from utils.util import translate_to_classes
 from database import databasemanager
-from utils.llm_query import LLMQueryClass
+from utils.llm_query import get_llm_instance
 nltk.download('punkt')
 nltk.download('stopwords')
 import re
@@ -20,22 +20,22 @@ CustomListofWordstoExclude = ["'s", 'say', 'says', 'said', 's', "n't"]
 stopwords.extend(CustomListofWordstoExclude)
 
 
-
-def calculate_score_using_api_call(maintext, claim):
-    stanceDetector = LLMQueryClass()
-    answer = stanceDetector.get_response_from_api_call(summaries=maintext, claim=claim)
-    answer = answer.replace("\n", " ")
-    score = 0
-    if "false" in answer.lower() or "Answer: REFUTES" in answer or ("no evidence that supports the claim".lower() in answer.lower() or ("REFUTE".lower() in answer.lower() and "SUPPORT".lower() not in answer.lower())):
-        score = -1
-    elif "true" in answer.lower() or "Answer: SUPPORTS" in answer or ("SUPPORT".lower() in answer.lower() and "REFUTE".lower() not in answer.lower()):
-        score = 1
-    elif "NOT ENOUGH INFO".lower() in answer.lower():
-        score = 0
-    else:
-        score = 0
-    logging.info("LLM based Detection Results:"+str(score))
-    return str(score)
+#
+# def calculate_score_using_api_call(maintext, claim):
+#     stanceDetector = LLMQueryClass()
+#     answer = stanceDetector.get_response_from_api_call(summaries=maintext, claim=claim)
+#     answer = answer.replace("\n", " ")
+#     score = 0
+#     if "false" in answer.lower() or "Answer: REFUTES" in answer or ("no evidence that supports the claim".lower() in answer.lower() or ("REFUTE".lower() in answer.lower() and "SUPPORT".lower() not in answer.lower())):
+#         score = -1
+#     elif "true" in answer.lower() or "Answer: SUPPORTS" in answer or ("SUPPORT".lower() in answer.lower() and "REFUTE".lower() not in answer.lower()):
+#         score = 1
+#     elif "NOT ENOUGH INFO".lower() in answer.lower():
+#         score = 0
+#     else:
+#         score = 0
+#     logging.info("LLM based Detection Results:"+str(score))
+#     return str(score)
 
   
 # def do_query(maintext, claim):
@@ -63,15 +63,16 @@ def calculate(claims, identifier):
                 list_summaries.append(evidence_text)
                 # continue if text is empty
                 if not evidence_text:
-                    logging.warning("Skipping. Evidence not found for claim {}".format(claim_text))
+                    logging.warning("Skipping.")
                     continue
 
             # compute score between claim and evidence text
             # stance_score = do_query(list_summaries, claim_text)
-            stanceDetector = LLMQueryClass()
+            stanceDetector = get_llm_instance()
             stance_score = stanceDetector.get_single_claim_classification_response_from_api_call(summaries=list_summaries, claim=claim_text)
+            stance_score = extract_tf_label(stance_score)
             claim['final_llm_classification_score'] = stance_score
-
+            print("stance score for claim {}: {}".format(claim_text, stance_score))
         # parse to json
         claims_json = json.dumps(claims)
 
@@ -94,12 +95,39 @@ def extract_label(text: str) -> str:
     text = text.strip().upper()
 
     # Look for exact label tokens
-    match = re.search(r"\b(RELIABLE|UNRELIABLE|MIXED)\b", text)
+    match = re.search(r"\b(RELIABLE|UNRELIABLE|MIXED)\b", text, re.IGNORECASE)
     if match:
         return match.group(1)
 
     # Default fallback if nothing found
     return "UNKNOWN"
+
+
+def extract_tf_label(text: str) -> str:
+    """
+    Extract only the final label (RELIABLE, UNRELIABLE, MIXED)
+    from LLM output text.
+    """
+    # Normalize
+    text = text.strip().upper()
+    # Look for exact label tokens
+    # match = re.search(r"(TRUE|FALSE|NOT ENOUGH INFORMATION|NOT ENOUGH INFO)", text)
+    match = re.search(r"\b(TRUE|FALSE|NOT ENOUGH INFORMATION|NOT ENOUGH INFO)\b", text, re.IGNORECASE)
+    if match:
+        return match.group(1)
+
+    # Default fallback if nothing found
+    return "UNKNOWN"
+
+def save_to_file(identifier, list_claim_decisions,veracity_label):
+    # Save to a .jsonl file
+    with open("claims.jsonl", "a", encoding="utf-8") as f:
+        record = {
+            "id": identifier,
+            "data": json.dumps(list(list_claim_decisions.values())),
+            "veracity_label": veracity_label
+        }
+        f.write(json.dumps(record) + "\n")
 
 def calculate_final_decision(claims, orignal_doc, identifier):
     """
@@ -119,12 +147,13 @@ def calculate_final_decision(claims, orignal_doc, identifier):
             list_claim_decisions[claim_text] = decisions
         # compute score between claim and list of decisions
 
-        stanceDetector = LLMQueryClass()
-        answer = stanceDetector.get_article_verdict(claim_verdicts=list_claim_decisions, article_text=orignal_doc)
+        stanceDetector = get_llm_instance()
+        answer = stanceDetector.get_article_verdict_llm(claim_verdicts=list_claim_decisions, article_text=orignal_doc)
         answer = answer.replace("\n", " ")
         answer = extract_label(answer)
-
+        print("final verdict is: {}".format(answer))
         # claim['final_llm_classification_score'] = answer
+        save_to_file(identifier, list_claim_decisions, answer)
 
         # parse to json
         claims_json = json.dumps(claims)
@@ -139,10 +168,10 @@ def calculate_final_decision(claims, orignal_doc, identifier):
                                             answer, identifier)
 
         # go next level
-        thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
-        thread.start()
+        # thread = threading.Thread(target=orchestrator.goNextLevel, args=(identifier,))
+        # thread.start()
         # go next level
-        # orchestrator.goNextLevel(identifier)
+        orchestrator.goNextLevel(identifier)
     except Exception as e:
         log_exception(e, identifier)
 

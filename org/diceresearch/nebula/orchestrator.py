@@ -14,6 +14,7 @@ from evidence_retrieval import llm_based_summary
 from translation import neamt_translator
 from indicators.main import run_indicator_check_api
 from utils.util import SetEncoder
+from utils.database_utils import update_database
 
 from utils import notification
 
@@ -61,7 +62,7 @@ def goNextLevel(identifier):
                                     identifier)
 
         # translate if language differs from english and we were not provided a translation already
-        if input_lang != "en" and not translated_text:
+        if input_lang != "eng" and not translated_text:
             # start the translation step
             logging.debug("Translation step")
             neamt_translator.send_translation_request(input_text, identifier)
@@ -76,15 +77,21 @@ def goNextLevel(identifier):
             goNextLevel(identifier)
 
     elif next_stage == 2:
-        logging.debug("Coreference resolution")
+        logging.info("Coreference resolution")
         # spacy_coref.replace_corefs(translated_text, identifier)
-        if settings.coref_llms== "True":
+        if settings.coref_by_llms_or_local== "llm":
             coreference_resolution.calculate_coref_using_api_call(translated_text, identifier)
-        else:
+        elif settings.coref_by_llms_or_local== "local":
             coreference_resolution.send_coref_request(translated_text, identifier)
+        else:
+            coref_text = translated_text
+            # save the result in database
+            update_database(settings.results_coref_column_name,settings.results_coref_column_status, coref_text, identifier)
+            # go next level
+            goNextLevel(identifier)
 
     elif next_stage == 3:
-        logging.debug("Claim check")
+        logging.info("Claim check")
 
         if settings.module_claimworthiness == "dummy":
             dummy_claim_check.check(coref_text, identifier)
@@ -92,33 +99,26 @@ def goNextLevel(identifier):
             claim_buster.check(coref_text, identifier)
 
     elif next_stage == 4:
-        logging.debug("Evidence retrieval")
+        logging.info("Evidence retrieval")
         elastic_search.retrieve(claims, identifier)
 
     elif next_stage == 5:
-        logging.debug("Summary retrieval")
+        logging.info("Summary retrieval")
         llm_based_summary.generate(claims, identifier)
 
     elif next_stage == 6:
-        logging.debug("LLM based single claims classification")
+        logging.info("LLM based single claims classification")
         llm_based_final_classification.calculate(claims, identifier)
 
     elif next_stage == 7:
-        logging.debug("final LLM based classification")
+        logging.info("final LLM based classification")
         llm_based_final_classification.calculate_final_decision(claims, coref_text, identifier)
 
-    # elif next_stage == 8:
-    #     logging.debug('Query the trained model')
-    #     predictions.predict(claims, identifier)
-    #
-    # elif next_stage == 9:
-    #     logging.debug('Query the trained RNN model')
-    #     predictions.predict_mean(claims, identifier)
 
     elif next_stage == 8:
         logging.debug('Run indicator check')
         # run indicators if label is false
-        if veracity_label == settings.false_label:
+        if veracity_label == 'asd': #settings.false_label:
             indicators = run_indicator_check_api(current)
             status = settings.completed
             indicator_json = json.dumps(indicators, cls=SetEncoder)
@@ -146,4 +146,11 @@ def goNextLevel(identifier):
         raise UnsupportedStage
 
 
+# elif next_stage == 8:
+    #     logging.debug('Query the trained model')
+    #     predictions.predict(claims, identifier)
+    #
+    # elif next_stage == 9:
+    #     logging.debug('Query the trained RNN model')
+    #     predictions.predict_mean(claims, identifier)
 

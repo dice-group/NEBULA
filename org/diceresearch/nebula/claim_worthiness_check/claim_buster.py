@@ -30,6 +30,8 @@ def check(text, identifier):
         # limit the number of claims to the top k
         json_response = json.loads(api_response)
         results = pd.json_normalize(json_response, record_path='results')
+        results = results.drop_duplicates(subset=["text"], keep="first")
+
         if len(results) > settings.claim_limit:
             results = results.sort_values('score', ascending=False).head(settings.claim_limit)
 

@@ -10,7 +10,7 @@ source nebula/bin/activate
 pip install -r requirements.txt
 ```
 ```
-conda create -n nebula python=3.8.10
+conda create -n nebula python=3.11
 conda activate nebula
 pip install -r requirements.txt
 ```
