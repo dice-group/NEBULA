@@ -118,7 +118,7 @@ def goNextLevel(identifier):
     elif next_stage == 8:
         logging.debug('Run indicator check')
         # run indicators if label is false
-        if veracity_label == 'asd': #settings.false_label:
+        if veracity_label == settings.false_label:
             indicators = run_indicator_check_api(current)
             status = settings.completed
             indicator_json = json.dumps(indicators, cls=SetEncoder)

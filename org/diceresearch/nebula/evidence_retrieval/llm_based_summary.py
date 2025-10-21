@@ -48,7 +48,12 @@ def generate(claims, identifier):
             evidences = claim['evidences']
             evidence_texts = []
             # divide remaining tokens across evidences
-            max_evidence_tokens = MAX_MODEL_TOKENS // len(evidences)
+            leng = len(evidences)
+            if leng > 0:
+                max_evidence_tokens = MAX_MODEL_TOKENS // leng
+            else:
+                max_evidence_tokens = MAX_MODEL_TOKENS
+
             for evidence in evidences:
                 evidence_text = evidence['evidence_text'].replace("\n"," ")
                 # continue if text is empty

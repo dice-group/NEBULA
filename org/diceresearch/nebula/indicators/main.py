@@ -86,7 +86,7 @@ def run_indicator_check_api(json_input: Any):
         "evidence_retrieval": "",
         "stance_detection_status": json_input["STANCE_DETECTION_RESULT_STATUS"],
         "wiseone": "",
-        "wiseone_status": json_input["WISE_ONE_RESULT_STATUS"],
+        "wiseone_status": "COMPLETED",
         "status": "DONE",
         "version": json_input["VERSION"],
         "error_body": json_input["ERROR_BODY"],
